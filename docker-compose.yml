@@ -3,6 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: app-runtime
     image: anonaddy-app:local
     env_file:
       - .env
@@ -16,12 +17,14 @@ services:
     volumes:
       - app-storage:/var/www/html/storage
       - app-bootstrap:/var/www/html/bootstrap/cache
+      - mail-logs:/var/log/mail:ro
     restart: unless-stopped
 
   queue:
     build:
       context: .
       dockerfile: Dockerfile
+      target: app-runtime
     image: anonaddy-app:local
     env_file:
       - .env
@@ -40,6 +43,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: app-runtime
     image: anonaddy-app:local
     env_file:
       - .env
@@ -52,12 +56,14 @@ services:
     volumes:
       - app-storage:/var/www/html/storage
       - app-bootstrap:/var/www/html/bootstrap/cache
+      - mail-logs:/var/log/mail:ro
     restart: unless-stopped
 
   migrate:
     build:
       context: .
       dockerfile: Dockerfile
+      target: app-runtime
     image: anonaddy-app:local
     env_file:
       - .env
@@ -95,8 +101,41 @@ services:
       - redis-data:/data
     restart: unless-stopped
 
+  mail:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: mail-runtime
+    image: anonaddy-mail:local
+    env_file:
+      - .env
+    hostname: ${ANONADDY_HOSTNAME:-mail.example.com}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    ports:
+      - "25:25"
+    volumes:
+      - app-storage:/var/www/html/storage
+      - app-bootstrap:/var/www/html/bootstrap/cache
+      - mail-certs:/etc/postfix/certs
+      - mail-logs:/var/log/mail
+      - mail-spool:/var/spool/postfix
+    restart: unless-stopped
+
 volumes:
   app-storage:
   app-bootstrap:
+  mail-certs:
+  mail-logs:
+  mail-spool:
   mysql-data:
   redis-data:
+
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: ${DOCKER_SUBNET:-172.28.0.0/16}

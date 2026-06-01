@@ -36,13 +36,14 @@ RUN cd postfix && CACHE_DRIVER=file composer install --no-interaction --prefer-d
 
 FROM node:24-alpine AS assets
 WORKDIR /src
+ARG APP_URL=http://localhost
 COPY package*.json ./
 RUN npm ci --no-audit --no-fund
 COPY . .
 COPY --from=composer-deps /src/vendor /src/vendor
-RUN npm run production
+RUN APP_URL="${APP_URL}" npm run production
 
-FROM php:8.3-fpm-alpine
+FROM php:8.3-fpm-alpine AS app-runtime
 
 RUN apk add --no-cache \
     autoconf \
@@ -84,3 +85,20 @@ COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 EXPOSE 80
 
 CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+
+FROM app-runtime AS mail-runtime
+
+RUN apk add --no-cache \
+    openssl \
+    postfix \
+    postfix-mysql
+
+COPY docker/mail/entrypoint.sh /usr/local/bin/anonaddy-mail-entrypoint
+
+RUN chmod +x /usr/local/bin/anonaddy-mail-entrypoint \
+    && cp /etc/postfix/master.cf /etc/postfix/master.cf.dist \
+    && mkdir -p /etc/postfix/certs /var/log/mail
+
+EXPOSE 25
+
+CMD ["/usr/local/bin/anonaddy-mail-entrypoint"]
