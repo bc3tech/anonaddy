@@ -1,0 +1,47 @@
+{
+  "name": "Digital Twin Dev Container",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "configureZshAsDefaultShell": false,
+      "installZsh": false,
+      "upgradePackages": false,
+      "username": "vscode"
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/copilot-cli:1": {},
+    "ghcr.io/devcontainers/features/powershell:2": {},
+    "ghcr.io/devcontainers/features/php:1": {
+      "version": "8.3",
+      "installComposer": true
+    },
+    "ghcr.io/devcontainers/features/node:2": {
+      "version": "lts"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "bmewburn.vscode-intelephense-client",
+        "Vue.volar",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss",
+        "editorconfig.editorconfig",
+        "github.copilot",
+        "github.copilot-chat"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "pwsh"
+      }
+    }
+  },
+  "mounts": [
+    "source=${localWorkspaceFolder}/.devcontainer/gitconfig.effective,target=${containerWorkspaceFolder}/.devcontainer/gitconfig.effective,type=bind,consistency=cached"
+  ],
+  "containerEnv": {
+    "POWERSHELL_DISTRIBUTION_CHANNEL": "DevContainers"
+  },
+  "postCreateCommand": "bash .devcontainer/scripts/bootstrap-ghcp-digital-twin.sh",
+  "postStartCommand": "bash .devcontainer/scripts/apply-global-git-config.sh .devcontainer/gitconfig.effective",
+  "remoteUser": "vscode"
+}
