@@ -44,24 +44,6 @@
                             @endif
                         </div>
 
-                        <div class="flex flex-wrap mb-4 items-center">
-                            <label for="captcha" class="block w-full text-grey-700 text-sm">
-                                Human Verification (click image to refresh)
-                            </label>
-
-                            <div class="flex grow flex-wrap">
-                                <img src="{{captcha_src('mini')}}" onclick="this.src='/captcha/mini?'+Math.random()" class="cursor-pointer shrink-0 h-12 w-16 mr-2 mt-2" title="Click to refresh image" alt="captcha">
-
-                                <input id="captcha" type="text" class="grow mt-2 appearance-none bg-grey-100 rounded p-3 text-grey-700 focus:ring{{ $errors->has('captcha') ? ' border-red-500' : '' }}" name="captcha" placeholder="Enter the text you see" required>
-                            </div>
-
-                            @if ($errors->has('captcha'))
-                                <p class="text-red-500 text-xs italic mt-4">
-                                    {{ $errors->first('captcha') }}
-                                </p>
-                            @endif
-                        </div>
-
                     </div>
 
                     <div class="px-6 md:px-10 py-4 bg-grey-50 border-t border-grey-100 flex flex-wrap items-center justify-center">

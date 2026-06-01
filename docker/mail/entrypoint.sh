@@ -13,6 +13,20 @@ touch /var/log/mail/mail.log
 chown root:root /var/log/mail/mail.log
 chmod 0644 /var/log/mail/mail.log
 
+runtime_env_file="/var/www/html/.env"
+{
+    printenv | sort | while IFS='=' read -r name value; do
+        case "${name}" in
+            APP_*|ANONADDY_*|AWS_*|BROADCAST_*|CACHE_*|DB_*|FILESYSTEM_*|LOG_*|MAIL_*|POSTMARK_*|PUSHER_*|QUEUE_*|REDIS_*|RESEND_*|SESSION_*|VITE_*)
+                escaped_value="$(printf '%s' "${value}" | sed 's/\\/\\\\/g; s/"/\\"/g; s/\$/\\$/g')"
+                printf '%s="%s"\n' "${name}" "${escaped_value}"
+                ;;
+        esac
+    done
+} > "${runtime_env_file}"
+chown www-data:www-data "${runtime_env_file}"
+chmod 0640 "${runtime_env_file}"
+
 if [ ! -s "${tls_cert_file}" ] || [ ! -s "${tls_key_file}" ]; then
     openssl req -x509 -newkey rsa:4096 -nodes -days 365 \
         -subj "/CN=${hostname}" \
@@ -44,6 +58,7 @@ password = ${DB_PASSWORD:-secret}
 hosts = ${DB_HOST:-mysql}
 dbname = ${DB_DATABASE:-anonaddy}
 query = SELECT (SELECT 1 FROM usernames WHERE '%s' IN (${username_domain_clauses})) AS usernames, (SELECT 1 FROM domains WHERE domain = '%s' AND domain_verified_at IS NOT NULL) AS domains LIMIT 1;
+tls_verify_cert = ${POSTFIX_MYSQL_TLS_VERIFY_CERT:-no}
 EOF
 
 chmod 0640 /etc/postfix/mysql-virtual-alias-domains-and-subdomains.cf
