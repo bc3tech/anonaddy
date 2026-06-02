@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
       target: app-runtime
-    image: anonaddy-app:local
+    image: registry.bc3.tech/anonaddy/anonaddy-app:local
     env_file:
       - .env
     ports:
@@ -24,7 +24,7 @@ services:
       context: .
       dockerfile: Dockerfile
       target: app-runtime
-    image: anonaddy-app:local
+    image: registry.bc3.tech/anonaddy/anonaddy-app:local
     env_file:
       - .env
     command: sh -c "php artisan queue:work --tries=3 --timeout=600 --memory=512"
@@ -42,7 +42,7 @@ services:
       context: .
       dockerfile: Dockerfile
       target: app-runtime
-    image: anonaddy-app:local
+    image: registry.bc3.tech/anonaddy/anonaddy-app:local
     env_file:
       - .env
     command: sh -c "while true; do php artisan schedule:run --verbose --no-interaction; sleep 60; done"
@@ -61,7 +61,7 @@ services:
       context: .
       dockerfile: Dockerfile
       target: app-runtime
-    image: anonaddy-app:local
+    image: registry.bc3.tech/anonaddy/anonaddy-app:local
     env_file:
       - .env
     command: sh -c "php artisan migrate --force && php artisan storage:link --force"
@@ -103,7 +103,7 @@ services:
       context: .
       dockerfile: Dockerfile
       target: mail-runtime
-    image: anonaddy-mail:local
+    image: registry.bc3.tech/anonaddy/anonaddy-mail:local
     env_file:
       - .env
     hostname: ${ANONADDY_HOSTNAME:-mail.example.com}
