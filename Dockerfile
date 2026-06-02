@@ -31,7 +31,8 @@ WORKDIR /src
 COPY composer.json composer.lock ./
 COPY postfix/composer.json postfix/composer.lock ./postfix/
 COPY . .
-RUN CACHE_DRIVER=file composer install --no-interaction --prefer-dist --no-dev --optimize-autoloader
+RUN rm -f bootstrap/cache/*.php \
+    && CACHE_DRIVER=file composer install --no-interaction --prefer-dist --no-dev --optimize-autoloader
 RUN cd postfix && CACHE_DRIVER=file composer install --no-interaction --prefer-dist --no-dev --optimize-autoloader
 
 FROM node:24-alpine AS assets

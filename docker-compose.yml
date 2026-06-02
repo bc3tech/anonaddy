@@ -16,7 +16,6 @@ services:
         condition: service_started
     volumes:
       - app-storage:/var/www/html/storage
-      - app-bootstrap:/var/www/html/bootstrap/cache
       - mail-logs:/var/log/mail:ro
     restart: unless-stopped
 
@@ -36,7 +35,6 @@ services:
         condition: service_started
     volumes:
       - app-storage:/var/www/html/storage
-      - app-bootstrap:/var/www/html/bootstrap/cache
     restart: unless-stopped
 
   scheduler:
@@ -55,7 +53,6 @@ services:
         condition: service_started
     volumes:
       - app-storage:/var/www/html/storage
-      - app-bootstrap:/var/www/html/bootstrap/cache
       - mail-logs:/var/log/mail:ro
     restart: unless-stopped
 
@@ -119,7 +116,6 @@ services:
       - "25:25"
     volumes:
       - app-storage:/var/www/html/storage
-      - app-bootstrap:/var/www/html/bootstrap/cache
       - mail-certs:/etc/postfix/certs
       - mail-logs:/var/log/mail
       - mail-spool:/var/spool/postfix
@@ -127,7 +123,6 @@ services:
 
 volumes:
   app-storage:
-  app-bootstrap:
   mail-certs:
   mail-logs:
   mail-spool:
