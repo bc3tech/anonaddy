@@ -92,8 +92,8 @@ class AzureCommunicationServicesTransport extends AbstractTransport
             $payload['content']['html'] = $email->getHtmlBody();
         }
 
-        if ($email->getReplyTo() !== []) {
-            $payload['replyTo'] = $this->acsAddresses($email->getReplyTo());
+        if ($replyTo = $this->replyToAddresses($email, $from)) {
+            $payload['replyTo'] = $replyTo;
         }
 
         if ($headers = $this->customHeaders($email)) {
@@ -184,6 +184,22 @@ class AzureCommunicationServicesTransport extends AbstractTransport
     private function acsAddresses(array $addresses): array
     {
         return array_map(fn (Address $address): array => $this->acsAddress($address), $addresses);
+    }
+
+    /**
+     * @return list<array{address: string, displayName?: string}>
+     */
+    private function replyToAddresses(Email $email, Address $from): array
+    {
+        if ($email->getReplyTo() !== []) {
+            return $this->acsAddresses($email->getReplyTo());
+        }
+
+        if ($this->senderAddress === null || strcasecmp($this->senderAddress, $from->getAddress()) === 0) {
+            return [];
+        }
+
+        return [$this->acsAddress($from)];
     }
 
     /**

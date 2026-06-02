@@ -137,6 +137,49 @@ class AzureCommunicationServicesTransportTest extends TestCase
     }
 
     #[Test]
+    public function it_uses_the_generated_from_address_as_reply_to_when_using_a_configured_sender(): void
+    {
+        Http::preventStrayRequests();
+        Http::fake([
+            'https://example.communication.azure.com/emails:send*' => Http::response([], 202),
+        ]);
+
+        $transport = new AzureCommunicationServicesTransport(
+            'https://example.communication.azure.com',
+            base64_encode('test-key'),
+            'DoNotReply@anon.bc3.tech',
+        );
+
+        $email = (new Email)
+            ->from(new Address('first+brandon=bc3.tech@b.anon.bc3.tech', 'Brandon at bc3.tech'))
+            ->to('visible-alias@b.anon.bc3.tech')
+            ->subject('Forwarded message')
+            ->text('Forwarded body');
+
+        $envelope = new Envelope(
+            new Address('bounce-token@anon.bc3.tech'),
+            [new Address('hurlburb@microsoft.com')]
+        );
+
+        $transport->send($email, $envelope);
+
+        Http::assertSent(function (Request $request): bool {
+            $payload = $request->data();
+
+            $this->assertSame('DoNotReply@anon.bc3.tech', $payload['senderAddress']);
+            $this->assertSame([
+                [
+                    'address' => 'first+brandon=bc3.tech@b.anon.bc3.tech',
+                    'displayName' => 'Brandon at bc3.tech',
+                ],
+            ], $payload['replyTo']);
+            $this->assertSame([['address' => 'hurlburb@microsoft.com']], $payload['recipients']['bcc']);
+
+            return true;
+        });
+    }
+
+    #[Test]
     public function it_throws_when_azure_rejects_the_message(): void
     {
         Http::preventStrayRequests();
