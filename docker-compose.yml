@@ -1,10 +1,11 @@
 services:
   app:
+    platform: linux/amd64,linux/arm64
     build:
       context: .
       dockerfile: Dockerfile
       target: app-runtime
-    image: registry.bc3.tech/anonaddy/anonaddy-app:local
+    image: registry.bc3.tech/anonaddy/anonaddy-app:latest
     env_file:
       - .env
     ports:
@@ -20,11 +21,12 @@ services:
     restart: unless-stopped
 
   queue:
+    platform: linux/amd64,linux/arm64
     build:
       context: .
       dockerfile: Dockerfile
       target: app-runtime
-    image: registry.bc3.tech/anonaddy/anonaddy-app:local
+    image: registry.bc3.tech/anonaddy/anonaddy-queue:latest
     env_file:
       - .env
     command: sh -c "php artisan queue:work --tries=3 --timeout=600 --memory=512"
@@ -38,11 +40,12 @@ services:
     restart: unless-stopped
 
   scheduler:
+    platform: linux/amd64,linux/arm64
     build:
       context: .
       dockerfile: Dockerfile
       target: app-runtime
-    image: registry.bc3.tech/anonaddy/anonaddy-app:local
+    image: registry.bc3.tech/anonaddy/anonaddy-scheduler:latest
     env_file:
       - .env
     command: sh -c "while true; do php artisan schedule:run --verbose --no-interaction; sleep 60; done"
@@ -57,11 +60,12 @@ services:
     restart: unless-stopped
 
   migrate:
+    platform: linux/amd64,linux/arm64
     build:
       context: .
       dockerfile: Dockerfile
       target: app-runtime
-    image: registry.bc3.tech/anonaddy/anonaddy-app:local
+    image: registry.bc3.tech/anonaddy/anonaddy-migrate:latest
     env_file:
       - .env
     command: sh -c "php artisan migrate --force && php artisan storage:link --force"
@@ -99,11 +103,12 @@ services:
     restart: unless-stopped
 
   mail:
+    platform: linux/amd64,linux/arm64
     build:
       context: .
       dockerfile: Dockerfile
       target: mail-runtime
-    image: registry.bc3.tech/anonaddy/anonaddy-mail:local
+    image: registry.bc3.tech/anonaddy/anonaddy-mail:latest
     env_file:
       - .env
     hostname: ${ANONADDY_HOSTNAME:-mail.example.com}
