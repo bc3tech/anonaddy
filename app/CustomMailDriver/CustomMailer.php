@@ -10,6 +10,7 @@ use App\Models\Recipient;
 use App\Models\User;
 use App\Notifications\FailedDeliveryNotification;
 use App\Notifications\GpgKeyExpired;
+use App\Support\MailRemoteMta;
 use Exception;
 use Illuminate\Contracts\Mail\Mailable as MailableContract;
 use Illuminate\Mail\Mailer;
@@ -191,7 +192,7 @@ class CustomMailer extends Mailer
                         'alias_id' => $data['aliasId'] ?? null,
                         'is_stored' => $isStored ?? false,
                         'bounce_type' => $bounceType,
-                        'remote_mta' => config('mail.mailers.smtp.host'),
+                        'remote_mta' => MailRemoteMta::forConfiguredMailer(),
                         'sender' => $symfonyMessage->getHeaders()->get('X-AnonAddy-Original-Sender')?->getValue(),
                         'destination' => $symfonyMessage->getTo()[0]?->getAddress(),
                         'email_type' => $emailType,

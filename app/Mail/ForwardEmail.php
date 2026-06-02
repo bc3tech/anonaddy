@@ -9,6 +9,7 @@ use App\Models\Alias;
 use App\Models\EmailData;
 use App\Models\Recipient;
 use App\Notifications\FailedDeliveryNotification;
+use App\Support\MailRemoteMta;
 use App\Traits\ApplyUserRules;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeEncrypted;
@@ -533,7 +534,7 @@ class ForwardEmail extends Mailable implements ShouldBeEncrypted, ShouldQueue
             'recipient_id' => $this->recipientId,
             'alias_id' => $this->alias->id,
             'bounce_type' => null,
-            'remote_mta' => config('mail.mailers.smtp.host'),
+            'remote_mta' => MailRemoteMta::forConfiguredMailer(),
             'sender' => $this->sender,
             'email_type' => 'F',
             'status' => null,
