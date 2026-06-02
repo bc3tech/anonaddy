@@ -20,6 +20,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->authenticateSessions();
         $middleware->statefulApi();
 
+        if (env('TRUSTED_PROXIES')) {
+            $middleware->trustProxies(at: env('TRUSTED_PROXIES'));
+        }
+
         $middleware->trimStrings(
             except: [
                 'current',
