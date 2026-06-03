@@ -32,7 +32,8 @@
     }
   },
   "mounts": [
-    "source=${localWorkspaceFolder}/.devcontainer/gitconfig.effective,target=${containerWorkspaceFolder}/.devcontainer/gitconfig.effective,type=bind,consistency=cached"
+    "source=${localWorkspaceFolder}/.devcontainer/gitconfig.effective,target=${containerWorkspaceFolder}/.devcontainer/gitconfig.effective,type=bind,consistency=cached",
+    "source=${localEnv:COPILOT_HOME:${localEnv:HOME}/.copilot},target=/home/vscode/.copilot,type=bind,consistency=cached"
     // Additional cache mounts are merged in by merge-devcontainer-config.sh from cache-mounts.generated.json
   ],
   "containerEnv": {

@@ -36,7 +36,8 @@
     }
   },
   "mounts": [
-    "source=${localWorkspaceFolder}/.devcontainer/gitconfig.effective,target=${containerWorkspaceFolder}/.devcontainer/gitconfig.effective,type=bind,consistency=cached"
+    "source=${localWorkspaceFolder}/.devcontainer/gitconfig.effective,target=${containerWorkspaceFolder}/.devcontainer/gitconfig.effective,type=bind,consistency=cached",
+    "source=${localEnv:COPILOT_HOME:${localEnv:HOME}/.copilot},target=/home/vscode/.copilot,type=bind,consistency=cached"
   ],
   "containerEnv": {
     "POWERSHELL_DISTRIBUTION_CHANNEL": "DevContainers"
