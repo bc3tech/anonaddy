@@ -22,11 +22,7 @@ services:
 
   queue:
     platform: linux/amd64,linux/arm64
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: app-runtime
-    image: registry.bc3.tech/anonaddy/anonaddy-queue:latest
+    image: registry.bc3.tech/anonaddy/anonaddy-app:latest
     env_file:
       - .env
     command: sh -c "php artisan queue:work --tries=3 --timeout=600 --memory=512"
@@ -41,11 +37,7 @@ services:
 
   scheduler:
     platform: linux/amd64,linux/arm64
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: app-runtime
-    image: registry.bc3.tech/anonaddy/anonaddy-scheduler:latest
+    image: registry.bc3.tech/anonaddy/anonaddy-app:latest
     env_file:
       - .env
     command: sh -c "while true; do php artisan schedule:run --verbose --no-interaction; sleep 60; done"
@@ -61,11 +53,7 @@ services:
 
   migrate:
     platform: linux/amd64,linux/arm64
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: app-runtime
-    image: registry.bc3.tech/anonaddy/anonaddy-migrate:latest
+    image: registry.bc3.tech/anonaddy/anonaddy-app:latest
     env_file:
       - .env
     command: sh -c "php artisan migrate --force && php artisan storage:link --force"
