@@ -417,13 +417,6 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
         {
           name: 'app'
           image: placeholderImage
-          command: [
-            'sh'
-            '-c'
-          ]
-          args: [
-            'mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/framework/testing storage/logs && php artisan migrate --force && php artisan storage:link --force && /usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.conf'
-          ]
           resources: {
             cpu: json('0.25')
             memory: '0.5Gi'
@@ -471,12 +464,6 @@ resource mail 'Microsoft.App/containerApps@2024-03-01' = {
           identity: identityId
         }
       ]
-      ingress: {
-        external: true
-        targetPort: 25
-        exposedPort: 25
-        transport: 'tcp'
-      }
       secrets: commonSecrets
     }
     template: {
@@ -498,13 +485,6 @@ resource mail 'Microsoft.App/containerApps@2024-03-01' = {
         {
           name: 'mail'
           image: placeholderImage
-          command: [
-            'sh'
-            '-c'
-          ]
-          args: [
-            'mkdir -p /var/www/html/storage/framework/cache /var/www/html/storage/framework/sessions /var/www/html/storage/framework/views /var/www/html/storage/framework/testing /var/www/html/storage/logs && /usr/local/bin/anonaddy-mail-entrypoint'
-          ]
           resources: {
             cpu: json('0.25')
             memory: '0.5Gi'
@@ -569,4 +549,4 @@ resource mail 'Microsoft.App/containerApps@2024-03-01' = {
 }
 
 output appFqdn string = 'https://${app.properties.configuration.ingress.fqdn}'
-output mailFqdn string = mail.properties.configuration.ingress.fqdn
+output mailFqdn string = '${mailName}.${environment.properties.defaultDomain}'

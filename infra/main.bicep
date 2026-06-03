@@ -170,5 +170,5 @@ output APP_CONTAINER_APP_NAME string = appName
 output MAIL_CONTAINER_APP_NAME string = mailName
 output MYSQL_CONTAINER_APP_NAME string = mysqlName
 output CONTAINER_APP_ENVIRONMENT_NAME string = environmentNameActual
-output APP_URL string = apps.outputs.appFqdn
+output APP_INGRESS_URL string = apps.outputs.appFqdn
 output SMTP_HOSTNAME string = apps.outputs.mailFqdn

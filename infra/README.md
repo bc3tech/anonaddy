@@ -113,7 +113,7 @@ Point wildcard MX to that host:
 The web hostname can use the Container Apps default URL from:
 
 ```powershell
-azd env get-value APP_URL
+azd env get-value APP_INGRESS_URL
 ```
 
 Add a Container Apps custom domain later if you want `https://anon.bc3.tech` directly on the app.
@@ -129,4 +129,3 @@ Add a Container Apps custom domain later if you want `https://anon.bc3.tech` dir
 | Container Apps if mail+mysql min replicas 1 | 0.25 vCPU / 0.5 GiB each, idle | ~$15-30 |
 
 Cheapest expected idle cost is roughly **$6-16/month**. Reliability mode with always-on SMTP and MySQL is closer to **$25-45/month**.
-
