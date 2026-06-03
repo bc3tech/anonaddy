@@ -14,10 +14,23 @@ function Get-AzdValue {
     return $value.Trim().Trim('"')
 }
 
+function Get-OptionalAzdValue {
+    param([Parameter(Mandatory = $true)][string] $Name)
+
+    $value = azd env get-value $Name 2>$null
+    if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($value)) {
+        return $null
+    }
+
+    return $value.Trim().Trim('"')
+}
+
 $registryEndpoint = Get-AzdValue 'AZURE_CONTAINER_REGISTRY_ENDPOINT'
 $resourceGroupName = Get-AzdValue 'RESOURCE_GROUP_NAME'
 $appName = Get-AzdValue 'APP_CONTAINER_APP_NAME'
 $mailName = Get-AzdValue 'MAIL_CONTAINER_APP_NAME'
+$appCustomDomain = Get-OptionalAzdValue 'APP_CUSTOM_DOMAIN'
+$bindAppCustomDomain = (Get-OptionalAzdValue 'AZURE_BIND_APP_CUSTOM_DOMAIN') -eq 'true'
 
 $registryName = $registryEndpoint.Split('.')[0]
 $platform = if ($env:AZURE_IMAGE_PLATFORM) { $env:AZURE_IMAGE_PLATFORM } else { 'linux/amd64' }
@@ -75,6 +88,28 @@ az containerapp ingress enable `
     --transport tcp | Out-Host
 if ($LASTEXITCODE -ne 0) {
     throw "mail ingress enable failed."
+}
+
+if ($bindAppCustomDomain -and -not [string]::IsNullOrWhiteSpace($appCustomDomain)) {
+    Write-Host "Adding app custom hostname '$appCustomDomain'..."
+    az containerapp hostname add `
+        --resource-group $resourceGroupName `
+        --name $appName `
+        --hostname $appCustomDomain | Out-Host
+    if ($LASTEXITCODE -ne 0) {
+        throw "app hostname add failed. Confirm DNS A and TXT records are in place."
+    }
+
+    Write-Host "Binding managed certificate for '$appCustomDomain'..."
+    az containerapp hostname bind `
+        --resource-group $resourceGroupName `
+        --name $appName `
+        --hostname $appCustomDomain | Out-Host
+    if ($LASTEXITCODE -ne 0) {
+        throw "app hostname bind failed. Confirm DNS validation is complete and DigiCert issuance is allowed."
+    }
+} elseif (-not [string]::IsNullOrWhiteSpace($appCustomDomain)) {
+    Write-Host "Skipping app custom domain bind for '$appCustomDomain'. Set AZURE_BIND_APP_CUSTOM_DOMAIN=true after DNS verification records are created."
 }
 
 Write-Host "Deployment images updated."

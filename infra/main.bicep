@@ -12,6 +12,9 @@ param principalId string = ''
 @description('Public application URL, for example https://anon.bc3.tech.')
 param appUrl string
 
+@description('Custom HTTPS hostname for the app Container App.')
+param appCustomDomain string = 'anon.bc3.tech'
+
 @description('Primary AnonAddy alias domain.')
 param anonaddyDomain string
 
@@ -158,6 +161,7 @@ module apps './modules/container-apps.bicep' = {
     mailFromAddress: mailFromAddress
     mailAcsEndpoint: mailAcsEndpoint
     mailAcsAccessKey: mailAcsAccessKey
+    appCustomDomain: appCustomDomain
     appMinReplicas: appMinReplicas
     mailMinReplicas: mailMinReplicas
     mysqlMinReplicas: mysqlMinReplicas
@@ -171,4 +175,9 @@ output MAIL_CONTAINER_APP_NAME string = mailName
 output MYSQL_CONTAINER_APP_NAME string = mysqlName
 output CONTAINER_APP_ENVIRONMENT_NAME string = environmentNameActual
 output APP_INGRESS_URL string = apps.outputs.appFqdn
+output APP_CUSTOM_DOMAIN string = appCustomDomain
+output APP_DOMAIN_VERIFICATION_ID string = apps.outputs.appDomainVerificationId
 output SMTP_HOSTNAME string = apps.outputs.mailFqdn
+output SMTP_CUSTOM_HOSTNAME string = anonaddyHostname
+output WILDCARD_MX_DOMAIN string = '*.${anonaddyDomain}'
+output CONTAINER_APP_ENVIRONMENT_STATIC_IP string = apps.outputs.environmentStaticIp

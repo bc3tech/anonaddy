@@ -5,6 +5,7 @@ param location = readEnvironmentVariable('AZURE_LOCATION', 'westus3')
 param principalId = readEnvironmentVariable('AZURE_PRINCIPAL_ID', '')
 
 param appUrl = readEnvironmentVariable('APP_URL', 'https://anon.bc3.tech')
+param appCustomDomain = readEnvironmentVariable('APP_CUSTOM_DOMAIN', 'anon.bc3.tech')
 param anonaddyDomain = readEnvironmentVariable('ANONADDY_DOMAIN', 'anon.bc3.tech')
 param anonaddyHostname = readEnvironmentVariable('ANONADDY_HOSTNAME', 'mail.anon.bc3.tech')
 param anonaddyAdminUsername = readEnvironmentVariable('ANONADDY_ADMIN_USERNAME', 'admin')
@@ -24,4 +25,3 @@ param mailFromName = readEnvironmentVariable('MAIL_FROM_NAME', 'AnonAddy')
 param mailFromAddress = readEnvironmentVariable('MAIL_FROM_ADDRESS', 'DoNotReply@anon.bc3.tech')
 param mailAcsEndpoint = readEnvironmentVariable('MAIL_ACS_ENDPOINT', '')
 param mailAcsAccessKey = readEnvironmentVariable('MAIL_ACS_ACCESS_KEY', '')
-

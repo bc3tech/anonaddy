@@ -61,6 +61,7 @@ Set these before `azd up`:
 ```powershell
 azd env set AZURE_LOCATION westus3
 azd env set APP_URL https://anon.bc3.tech
+azd env set APP_CUSTOM_DOMAIN anon.bc3.tech
 azd env set ANONADDY_DOMAIN anon.bc3.tech
 azd env set ANONADDY_ALL_DOMAINS anon.bc3.tech
 azd env set ANONADDY_HOSTNAME mail.anon.bc3.tech
@@ -98,25 +99,49 @@ azd up
 
 ## DNS
 
-After deployment, get the SMTP hostname:
+The deployment has two public names:
+
+| Purpose | Hostname | Azure target |
+|---|---|---|
+| Web UI | `anon.bc3.tech` | app Container App HTTP ingress |
+| SMTP MX target | `mail.anon.bc3.tech` | Container Apps environment static IP, TCP port 25 routed to mail Container App |
+
+After the first `azd provision`, collect the generated DNS values:
 
 ```powershell
+azd env get-value CONTAINER_APP_ENVIRONMENT_STATIC_IP
+azd env get-value APP_DOMAIN_VERIFICATION_ID
+azd env get-value APP_INGRESS_URL
 azd env get-value SMTP_HOSTNAME
 ```
 
-Point wildcard MX to that host:
+Create these DNS records:
 
 ```dns
-*.anon.bc3.tech. MX 10 <SMTP_HOSTNAME>.
+anon.bc3.tech.       A     <CONTAINER_APP_ENVIRONMENT_STATIC_IP>
+asuid.anon.bc3.tech. TXT   <APP_DOMAIN_VERIFICATION_ID>
+
+mail.anon.bc3.tech.  A     <CONTAINER_APP_ENVIRONMENT_STATIC_IP>
+*.anon.bc3.tech.     MX 10 mail.anon.bc3.tech.
 ```
 
-The web hostname can use the Container Apps default URL from:
+The `mail` Container App uses external TCP ingress with exposed port `25`. The Container Apps environment public IP routes TCP 25 to the mail app, so `mail.anon.bc3.tech` should be an `A` record to the environment IP instead of an MX target CNAME.
+
+After DNS has propagated, enable the app custom domain binding and rerun `azd up`:
 
 ```powershell
-azd env get-value APP_INGRESS_URL
+azd env set AZURE_BIND_APP_CUSTOM_DOMAIN true
+azd up
 ```
 
-Add a Container Apps custom domain later if you want `https://anon.bc3.tech` directly on the app.
+The hook will run:
+
+```powershell
+az containerapp hostname add --hostname anon.bc3.tech
+az containerapp hostname bind --hostname anon.bc3.tech
+```
+
+Container Apps issues a free managed certificate for `anon.bc3.tech` after the A/TXT records validate. If your zone has CAA records, allow DigiCert (`0 issue digicert.com`) for managed certificate issuance.
 
 ## Rough monthly cost estimate
 

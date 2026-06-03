@@ -36,6 +36,7 @@ param mailFromAddress string
 param mailAcsEndpoint string
 @secure()
 param mailAcsAccessKey string
+param appCustomDomain string
 param appMinReplicas int
 param mailMinReplicas int
 param mysqlMinReplicas int
@@ -550,3 +551,6 @@ resource mail 'Microsoft.App/containerApps@2024-03-01' = {
 
 output appFqdn string = 'https://${app.properties.configuration.ingress.fqdn}'
 output mailFqdn string = '${mailName}.${environment.properties.defaultDomain}'
+output appCustomDomain string = appCustomDomain
+output appDomainVerificationId string = app.properties.customDomainVerificationId
+output environmentStaticIp string = environment.properties.staticIp
