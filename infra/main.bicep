@@ -69,6 +69,12 @@ param mailAcsEndpoint string
 @description('Azure Communication Services Email access key.')
 param mailAcsAccessKey string
 
+@description('Container image for the app service. azd sets SERVICE_APP_IMAGE_NAME after deploy.')
+param appImageName string = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
+
+@description('Container image for the mail service. azd sets SERVICE_MAIL_IMAGE_NAME after deploy.')
+param mailImageName string = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
+
 @description('Minimum replicas for the web app. Keep 0 for cheapest scale-to-zero.')
 param appMinReplicas int = 0
 
@@ -165,6 +171,8 @@ module apps './modules/container-apps.bicep' = {
     mailFromAddress: mailFromAddress
     mailAcsEndpoint: mailAcsEndpoint
     mailAcsAccessKey: mailAcsAccessKey
+    appImageName: appImageName
+    mailImageName: mailImageName
     appCustomDomain: appCustomDomain
     appMinReplicas: appMinReplicas
     mailMinReplicas: mailMinReplicas

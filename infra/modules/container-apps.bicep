@@ -38,12 +38,13 @@ param mailFromAddress string
 param mailAcsEndpoint string
 @secure()
 param mailAcsAccessKey string
+param appImageName string
+param mailImageName string
 param appCustomDomain string
 param appMinReplicas int
 param mailMinReplicas int
 param mysqlMinReplicas int
 
-var placeholderImage = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
 var mysqlImage = 'mysql:8.4'
 var redisImage = 'redis:7-alpine'
 var commonSecrets = [
@@ -482,7 +483,7 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
       containers: [
         {
           name: 'app'
-          image: placeholderImage
+          image: appImageName
           resources: {
             cpu: json('0.25')
             memory: '0.5Gi'
@@ -490,7 +491,7 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
           env: concat(commonEnv, [
             {
               name: 'RUN_MIGRATIONS_ON_START'
-              value: 'true'
+              value: 'false'
             }
           ])
           volumeMounts: [
@@ -564,7 +565,7 @@ resource mail 'Microsoft.App/containerApps@2024-03-01' = {
       containers: [
         {
           name: 'mail'
-          image: placeholderImage
+          image: mailImageName
           resources: {
             cpu: json('0.25')
             memory: '0.5Gi'
@@ -653,7 +654,7 @@ resource scheduler 'Microsoft.App/jobs@2024-03-01' = {
       containers: [
         {
           name: 'scheduler'
-          image: placeholderImage
+          image: appImageName
           resources: {
             cpu: json('0.25')
             memory: '0.5Gi'
