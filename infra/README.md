@@ -52,6 +52,7 @@ flowchart LR
   - `CACHE_DRIVER=redis`
   - `SESSION_DRIVER=redis`
 - MySQL runs as a container with Azure Files persistence to avoid the fixed cost of Azure Database for MySQL Flexible Server.
+- Postfix spool stays on the container filesystem. Azure Files uses SMB semantics that conflict with Postfix ownership checks, so persistent storage is only used for app storage, mail logs, and generated TLS certs.
 
 ## Reliability tradeoffs
 
@@ -95,16 +96,17 @@ azd provision --preview
 azd up
 ```
 
-The `postprovision` hook builds the existing Dockerfile targets and updates the Container Apps:
+`azure.yaml` defines first-class azd services for the two project-owned containers:
 
 - `app-runtime` -> `anonaddy-app`
 - `mail-runtime` -> `anonaddy-mail`
 
-By default the hook builds `linux/amd64`. Override with:
+Use normal azd commands after provisioning:
 
 ```powershell
-$env:AZURE_IMAGE_PLATFORM='linux/amd64,linux/arm64'
-azd up
+azd deploy app
+azd deploy mail
+azd deploy
 ```
 
 ## DNS
@@ -137,14 +139,7 @@ mail.anon.bc3.tech.  A     <CONTAINER_APP_ENVIRONMENT_STATIC_IP>
 
 The `mail` Container App uses external TCP ingress with exposed port `25`. The Container Apps environment public IP routes TCP 25 to the mail app, so `mail.anon.bc3.tech` should be an `A` record to the environment IP instead of an MX target CNAME.
 
-After DNS has propagated, enable the app custom domain binding and rerun `azd up`:
-
-```powershell
-azd env set AZURE_BIND_APP_CUSTOM_DOMAIN true
-azd up
-```
-
-The hook will run:
+After DNS has propagated, enable the app custom domain binding manually:
 
 ```powershell
 az containerapp hostname add --hostname anon.bc3.tech

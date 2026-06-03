@@ -447,7 +447,9 @@ resource redis 'Microsoft.App/containerApps@2024-03-01' = {
 resource app 'Microsoft.App/containerApps@2024-03-01' = {
   name: appName
   location: location
-  tags: tags
+  tags: union(tags, {
+    'azd-service-name': 'app'
+  })
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
@@ -517,7 +519,9 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
 resource mail 'Microsoft.App/containerApps@2024-03-01' = {
   name: mailName
   location: location
-  tags: tags
+  tags: union(tags, {
+    'azd-service-name': 'mail'
+  })
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
@@ -534,6 +538,12 @@ resource mail 'Microsoft.App/containerApps@2024-03-01' = {
           identity: identityId
         }
       ]
+      ingress: {
+        external: true
+        targetPort: 25
+        exposedPort: 25
+        transport: 'tcp'
+      }
       secrets: commonSecrets
     }
     template: {
@@ -582,10 +592,6 @@ resource mail 'Microsoft.App/containerApps@2024-03-01' = {
               volumeName: 'mail-logs'
               mountPath: '/var/log/mail'
             }
-            {
-              volumeName: 'mail-spool'
-              mountPath: '/var/spool/postfix'
-            }
           ]
         }
       ]
@@ -603,11 +609,6 @@ resource mail 'Microsoft.App/containerApps@2024-03-01' = {
         {
           name: 'mail-logs'
           storageName: mailLogs.name
-          storageType: 'AzureFile'
-        }
-        {
-          name: 'mail-spool'
-          storageName: mailSpool.name
           storageType: 'AzureFile'
         }
       ]

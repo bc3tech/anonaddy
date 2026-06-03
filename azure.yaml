@@ -4,12 +4,28 @@ metadata:
 infra:
   provider: bicep
   path: infra
-hooks:
-  postprovision:
-    windows:
-      shell: pwsh
-      run: ./infra/hooks/deploy-images.ps1
-    posix:
-      shell: pwsh
-      run: ./infra/hooks/deploy-images.ps1
-
+services:
+  app:
+    project: .
+    language: docker
+    host: containerapp
+    resourceName: ${APP_CONTAINER_APP_NAME}
+    resourceGroup: ${RESOURCE_GROUP_NAME}
+    docker:
+      path: ./Dockerfile
+      context: .
+      target: app-runtime
+      platform: linux/amd64
+      remoteBuild: true
+  mail:
+    project: .
+    language: docker
+    host: containerapp
+    resourceName: ${MAIL_CONTAINER_APP_NAME}
+    resourceGroup: ${RESOURCE_GROUP_NAME}
+    docker:
+      path: ./Dockerfile
+      context: .
+      target: mail-runtime
+      platform: linux/amd64
+      remoteBuild: true

@@ -87,13 +87,6 @@ resource mailLogsShare 'Microsoft.Storage/storageAccounts/fileServices/shares@20
   }
 }
 
-resource mailSpoolShare 'Microsoft.Storage/storageAccounts/fileServices/shares@2025-01-01' = {
-  name: '${storage.name}/default/mail-spool'
-  properties: {
-    shareQuota: 5
-  }
-}
-
 resource acrPull 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(acr.id, identity.id, acrPullRoleDefinitionId)
   scope: acr
