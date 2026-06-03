@@ -1,0 +1,15 @@
+name: anonaddy
+metadata:
+  template: anonaddy-aca@0.1.0
+infra:
+  provider: bicep
+  path: infra
+hooks:
+  postprovision:
+    windows:
+      shell: pwsh
+      run: ./infra/hooks/deploy-images.ps1
+    posix:
+      shell: pwsh
+      run: ./infra/hooks/deploy-images.ps1
+
