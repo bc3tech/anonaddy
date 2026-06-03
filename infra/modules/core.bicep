@@ -30,7 +30,7 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2025-02-01' = {
   }
 }
 
-resource acr 'Microsoft.ContainerRegistry/registries@2025-05-01-preview' = {
+resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
   name: acrName
   location: location
   tags: tags
@@ -39,21 +39,7 @@ resource acr 'Microsoft.ContainerRegistry/registries@2025-05-01-preview' = {
   }
   properties: {
     adminUserEnabled: false
-    anonymousPullEnabled: false
     publicNetworkAccess: 'Enabled'
-    policies: {
-      quarantinePolicy: {
-        status: 'disabled'
-      }
-      trustPolicy: {
-        type: 'Notary'
-        status: 'disabled'
-      }
-      retentionPolicy: {
-        days: 7
-        status: 'enabled'
-      }
-    }
   }
 }
 

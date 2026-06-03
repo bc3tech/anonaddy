@@ -1,7 +1,7 @@
 using './main.bicep'
 
 param environmentName = readEnvironmentVariable('AZURE_ENV_NAME', 'dev')
-param location = readEnvironmentVariable('AZURE_LOCATION', 'westus3')
+param location = readEnvironmentVariable('AZURE_LOCATION', 'westus2')
 param principalId = readEnvironmentVariable('AZURE_PRINCIPAL_ID', '')
 
 param appUrl = readEnvironmentVariable('APP_URL', 'https://anon.bc3.tech')

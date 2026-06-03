@@ -59,7 +59,7 @@ param mysqlMinReplicas = 1
 Set these before `azd up`:
 
 ```powershell
-azd env set AZURE_LOCATION westus3
+azd env set AZURE_LOCATION westus2
 azd env set APP_URL https://anon.bc3.tech
 azd env set APP_CUSTOM_DOMAIN anon.bc3.tech
 azd env set ANONADDY_DOMAIN anon.bc3.tech
