@@ -214,11 +214,7 @@ class AzureCommunicationServicesTransport extends AbstractTransport
             return $from->getAddress();
         }
 
-        if ($from->getName() === '' || strcasecmp($this->senderAddress, $from->getAddress()) === 0) {
-            return $this->senderAddress;
-        }
-
-        return (new Address($this->senderAddress, $from->getName()))->toString();
+        return $this->senderAddress;
     }
 
     /**

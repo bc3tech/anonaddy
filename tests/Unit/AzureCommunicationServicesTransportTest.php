@@ -176,7 +176,7 @@ class AzureCommunicationServicesTransportTest extends TestCase
         Http::assertSent(function (Request $request): bool {
             $payload = $request->data();
 
-            $this->assertSame('"Brandon at bc3.tech" <DoNotReply@anon.bc3.tech>', $payload['senderAddress']);
+            $this->assertSame('DoNotReply@anon.bc3.tech', $payload['senderAddress']);
             $this->assertSame([
                 [
                     'address' => 'first+brandon=bc3.tech@b.anon.bc3.tech',
