@@ -4,6 +4,11 @@ metadata:
 infra:
   provider: bicep
   path: infra
+hooks:
+  postprovision:
+    shell: pwsh
+    run: ./infra/bind-custom-domain.ps1
+    interactive: false
 services:
   app:
     project: .
@@ -16,6 +21,11 @@ services:
       context: .
       platform: linux/amd64
       remoteBuild: true
+    hooks:
+      postdeploy:
+        shell: pwsh
+        run: ./infra/run-migrations.ps1
+        interactive: false
   mail:
     project: .
     language: docker

@@ -43,15 +43,17 @@ flowchart LR
 
 - Azure Container Apps consumption is used for web and SMTP containers.
 - The web app defaults to `minReplicas = 0`.
-- The SMTP and MySQL apps default to `minReplicas = 0` for cheapest deployment, but you should raise them to `1` if cold starts cause dropped SMTP connections or DB timeouts.
+- The SMTP app defaults to `minReplicas = 0` for cheapest deployment, but you should raise it to `1` if cold starts cause dropped SMTP connections.
+- MySQL defaults to `minReplicas = 1` to avoid DB cold-start connection failures during user requests.
 - Redis runs as a small internal Container App because the application calls `Redis::throttle()` directly for email and alias rate limiting.
 - A scheduled Container Apps Job runs `php artisan schedule:run` every five minutes. This avoids an always-on scheduler container.
 - Dedicated queue workers are intentionally omitted. The Azure environment uses `QUEUE_CONNECTION=sync` to avoid an always-on worker replica.
+- Database migrations are run through a dedicated **manual ACA Job** after app deploy (`infra/run-migrations.ps1` via `azure.yaml` postdeploy hook). This replaces the manual Docker Compose `migrate` step without re-running migrations on every app cold start.
 - The Azure environment uses:
   - `QUEUE_CONNECTION=sync`
   - `CACHE_DRIVER=redis`
   - `SESSION_DRIVER=redis`
-- MySQL runs as a container with Azure Files persistence to avoid the fixed cost of Azure Database for MySQL Flexible Server.
+- The database container uses MariaDB (MySQL-compatible) with Azure Files persistence to avoid the fixed cost of Azure Database for MySQL Flexible Server. MySQL 8.4 failed on this SMB-backed volume in ACA during InnoDB initialization.
 - Postfix spool stays on the container filesystem. Azure Files uses SMB semantics that conflict with Postfix ownership checks, so persistent storage is only used for app storage, mail logs, and generated TLS certs.
 
 ## Reliability tradeoffs
@@ -139,12 +141,7 @@ mail.anon.bc3.tech.  A     <CONTAINER_APP_ENVIRONMENT_STATIC_IP>
 
 The `mail` Container App uses external TCP ingress with exposed port `25`. The Container Apps environment public IP routes TCP 25 to the mail app, so `mail.anon.bc3.tech` should be an `A` record to the environment IP instead of an MX target CNAME.
 
-After DNS has propagated, enable the app custom domain binding manually:
-
-```powershell
-az containerapp hostname add --hostname anon.bc3.tech
-az containerapp hostname bind --hostname anon.bc3.tech
-```
+After DNS has propagated, `azd up` will reapply the app custom domain binding automatically through `infra/bind-custom-domain.ps1`.
 
 Container Apps issues a free managed certificate for `anon.bc3.tech` after the A/TXT records validate. If your zone has CAA records, allow DigiCert (`0 issue digicert.com`) for managed certificate issuance.
 

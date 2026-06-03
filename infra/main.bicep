@@ -63,10 +63,12 @@ param mailFromName string = 'AnonAddy'
 param mailFromAddress string
 
 @description('Azure Communication Services Email endpoint.')
+@minLength(1)
 param mailAcsEndpoint string
 
 @secure()
 @description('Azure Communication Services Email access key.')
+@minLength(1)
 param mailAcsAccessKey string
 
 @description('Container image for the app service. azd sets SERVICE_APP_IMAGE_NAME after deploy.')
@@ -81,8 +83,8 @@ param appMinReplicas int = 0
 @description('Minimum replicas for inbound SMTP. Keep 0 for cheapest; use 1 for more reliable SMTP acceptance.')
 param mailMinReplicas int = 0
 
-@description('Minimum replicas for MySQL. Keep 0 for cheapest; use 1 if DB cold starts cause connection failures.')
-param mysqlMinReplicas int = 0
+@description('Minimum replicas for MySQL. Keep 1 to avoid DB cold-start connection failures during user requests.')
+param mysqlMinReplicas int = 1
 
 var abbrs = json(loadTextContent('./abbreviations.json'))
 var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
@@ -99,6 +101,7 @@ var mailName = '${abbrs.appContainerApps}mail-${environmentName}-${resourceToken
 var mysqlName = '${abbrs.appContainerApps}mysql-${environmentName}-${resourceToken}'
 var redisName = '${abbrs.appContainerApps}redis-${environmentName}-${resourceToken}'
 var schedulerJobName = 'job-sch-${resourceToken}'
+var migrateJobName = 'job-mig-${resourceToken}'
 var identityName = '${abbrs.managedIdentityUserAssignedIdentities}${environmentName}-${resourceToken}'
 var logName = '${abbrs.operationalInsightsWorkspaces}${environmentName}-${resourceToken}'
 var vnetName = '${abbrs.networkVirtualNetworks}${environmentName}-${resourceToken}'
@@ -154,6 +157,7 @@ module apps './modules/container-apps.bicep' = {
     mysqlName: mysqlName
     redisName: redisName
     schedulerJobName: schedulerJobName
+    migrateJobName: migrateJobName
     appUrl: appUrl
     anonaddyDomain: anonaddyDomain
     anonaddyHostname: anonaddyHostname
@@ -187,6 +191,7 @@ output MAIL_CONTAINER_APP_NAME string = mailName
 output MYSQL_CONTAINER_APP_NAME string = mysqlName
 output REDIS_CONTAINER_APP_NAME string = redisName
 output SCHEDULER_CONTAINER_APP_JOB_NAME string = schedulerJobName
+output MIGRATE_CONTAINER_APP_JOB_NAME string = migrateJobName
 output CONTAINER_APP_ENVIRONMENT_NAME string = environmentNameActual
 output APP_INGRESS_URL string = apps.outputs.appFqdn
 output APP_CUSTOM_DOMAIN string = appCustomDomain

@@ -15,6 +15,7 @@ param mailName string
 param mysqlName string
 param redisName string
 param schedulerJobName string
+param migrateJobName string
 param appUrl string
 param anonaddyDomain string
 param anonaddyHostname string
@@ -45,7 +46,7 @@ param appMinReplicas int
 param mailMinReplicas int
 param mysqlMinReplicas int
 
-var mysqlImage = 'mysql:8.4'
+var mysqlImage = 'mariadb:11'
 var redisImage = 'redis:7-alpine'
 var commonSecrets = [
   {
@@ -655,6 +656,90 @@ resource scheduler 'Microsoft.App/jobs@2024-03-01' = {
         {
           name: 'scheduler'
           image: appImageName
+          command: [
+            'php'
+          ]
+          args: [
+            'artisan'
+            'schedule:run'
+          ]
+          resources: {
+            cpu: json('0.25')
+            memory: '0.5Gi'
+          }
+          env: commonEnv
+          volumeMounts: [
+            {
+              volumeName: 'app-storage'
+              mountPath: '/var/www/html/storage'
+            }
+            {
+              volumeName: 'mail-logs'
+              mountPath: '/var/log/mail'
+            }
+          ]
+        }
+      ]
+      volumes: [
+        {
+          name: 'app-storage'
+          storageName: appStorage.name
+          storageType: 'AzureFile'
+        }
+        {
+          name: 'mail-logs'
+          storageName: mailLogs.name
+          storageType: 'AzureFile'
+        }
+      ]
+    }
+  }
+  dependsOn: [
+    mysql
+    redis
+  ]
+}
+
+resource migrate 'Microsoft.App/jobs@2024-03-01' = {
+  name: migrateJobName
+  location: location
+  tags: tags
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${identityId}': {}
+    }
+  }
+  properties: {
+    environmentId: environment.id
+    configuration: {
+      triggerType: 'Manual'
+      replicaTimeout: 1800
+      replicaRetryLimit: 0
+      manualTriggerConfig: {
+        parallelism: 1
+        replicaCompletionCount: 1
+      }
+      registries: [
+        {
+          server: acrLoginServer
+          identity: identityId
+        }
+      ]
+      secrets: commonSecrets
+    }
+    template: {
+      containers: [
+        {
+          name: 'migrate'
+          image: appImageName
+          command: [
+            'sh'
+          ]
+          args: [
+            '-lc'
+            'php artisan migrate --force && php artisan storage:link --force'
+          ]
           resources: {
             cpu: json('0.25')
             memory: '0.5Gi'
