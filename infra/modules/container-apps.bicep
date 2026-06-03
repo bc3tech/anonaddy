@@ -13,6 +13,8 @@ param storageAccountKey string
 param appName string
 param mailName string
 param mysqlName string
+param redisName string
+param schedulerJobName string
 param appUrl string
 param anonaddyDomain string
 param anonaddyHostname string
@@ -43,6 +45,7 @@ param mysqlMinReplicas int
 
 var placeholderImage = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
 var mysqlImage = 'mysql:8.4'
+var redisImage = 'redis:7-alpine'
 var commonSecrets = [
   {
     name: 'app-key'
@@ -124,7 +127,7 @@ var commonEnv = [
   }
   {
     name: 'CACHE_DRIVER'
-    value: 'file'
+    value: 'redis'
   }
   {
     name: 'QUEUE_CONNECTION'
@@ -132,7 +135,23 @@ var commonEnv = [
   }
   {
     name: 'SESSION_DRIVER'
-    value: 'file'
+    value: 'redis'
+  }
+  {
+    name: 'REDIS_CLIENT'
+    value: 'phpredis'
+  }
+  {
+    name: 'REDIS_HOST'
+    value: redisName
+  }
+  {
+    name: 'REDIS_PASSWORD'
+    value: 'null'
+  }
+  {
+    name: 'REDIS_PORT'
+    value: '6379'
   }
   {
     name: 'SESSION_SECURE_COOKIE'
@@ -381,6 +400,50 @@ resource mysql 'Microsoft.App/containerApps@2024-03-01' = {
   }
 }
 
+resource redis 'Microsoft.App/containerApps@2024-03-01' = {
+  name: redisName
+  location: location
+  tags: tags
+  properties: {
+    managedEnvironmentId: environment.id
+    configuration: {
+      activeRevisionsMode: 'Single'
+      ingress: {
+        external: false
+        targetPort: 6379
+        exposedPort: 6379
+        transport: 'tcp'
+      }
+    }
+    template: {
+      scale: {
+        minReplicas: 1
+        maxReplicas: 1
+        rules: [
+          {
+            name: 'tcp'
+            tcp: {
+              metadata: {
+                concurrentConnections: '10'
+              }
+            }
+          }
+        ]
+      }
+      containers: [
+        {
+          name: 'redis'
+          image: redisImage
+          resources: {
+            cpu: json('0.25')
+            memory: '0.5Gi'
+          }
+        }
+      ]
+    }
+  }
+}
+
 resource app 'Microsoft.App/containerApps@2024-03-01' = {
   name: appName
   location: location
@@ -447,6 +510,7 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
   }
   dependsOn: [
     mysql
+    redis
   ]
 }
 
@@ -551,6 +615,78 @@ resource mail 'Microsoft.App/containerApps@2024-03-01' = {
   }
   dependsOn: [
     mysql
+    redis
+  ]
+}
+
+resource scheduler 'Microsoft.App/jobs@2024-03-01' = {
+  name: schedulerJobName
+  location: location
+  tags: tags
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${identityId}': {}
+    }
+  }
+  properties: {
+    environmentId: environment.id
+    configuration: {
+      triggerType: 'Schedule'
+      replicaTimeout: 600
+      replicaRetryLimit: 1
+      scheduleTriggerConfig: {
+        cronExpression: '*/5 * * * *'
+        parallelism: 1
+        replicaCompletionCount: 1
+      }
+      registries: [
+        {
+          server: acrLoginServer
+          identity: identityId
+        }
+      ]
+      secrets: commonSecrets
+    }
+    template: {
+      containers: [
+        {
+          name: 'scheduler'
+          image: placeholderImage
+          resources: {
+            cpu: json('0.25')
+            memory: '0.5Gi'
+          }
+          env: commonEnv
+          volumeMounts: [
+            {
+              volumeName: 'app-storage'
+              mountPath: '/var/www/html/storage'
+            }
+            {
+              volumeName: 'mail-logs'
+              mountPath: '/var/log/mail'
+            }
+          ]
+        }
+      ]
+      volumes: [
+        {
+          name: 'app-storage'
+          storageName: appStorage.name
+          storageType: 'AzureFile'
+        }
+        {
+          name: 'mail-logs'
+          storageName: mailLogs.name
+          storageType: 'AzureFile'
+        }
+      ]
+    }
+  }
+  dependsOn: [
+    mysql
+    redis
   ]
 }
 

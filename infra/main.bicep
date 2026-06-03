@@ -91,6 +91,8 @@ var environmentNameActual = '${abbrs.appManagedEnvironments}${environmentName}-$
 var appName = '${abbrs.appContainerApps}app-${environmentName}-${resourceToken}'
 var mailName = '${abbrs.appContainerApps}mail-${environmentName}-${resourceToken}'
 var mysqlName = '${abbrs.appContainerApps}mysql-${environmentName}-${resourceToken}'
+var redisName = '${abbrs.appContainerApps}redis-${environmentName}-${resourceToken}'
+var schedulerJobName = 'job-sch-${resourceToken}'
 var identityName = '${abbrs.managedIdentityUserAssignedIdentities}${environmentName}-${resourceToken}'
 var logName = '${abbrs.operationalInsightsWorkspaces}${environmentName}-${resourceToken}'
 var vnetName = '${abbrs.networkVirtualNetworks}${environmentName}-${resourceToken}'
@@ -144,6 +146,8 @@ module apps './modules/container-apps.bicep' = {
     appName: appName
     mailName: mailName
     mysqlName: mysqlName
+    redisName: redisName
+    schedulerJobName: schedulerJobName
     appUrl: appUrl
     anonaddyDomain: anonaddyDomain
     anonaddyHostname: anonaddyHostname
@@ -173,6 +177,8 @@ output AZURE_CONTAINER_REGISTRY_ENDPOINT string = core.outputs.acrLoginServer
 output APP_CONTAINER_APP_NAME string = appName
 output MAIL_CONTAINER_APP_NAME string = mailName
 output MYSQL_CONTAINER_APP_NAME string = mysqlName
+output REDIS_CONTAINER_APP_NAME string = redisName
+output SCHEDULER_CONTAINER_APP_JOB_NAME string = schedulerJobName
 output CONTAINER_APP_ENVIRONMENT_NAME string = environmentNameActual
 output APP_INGRESS_URL string = apps.outputs.appFqdn
 output APP_CUSTOM_DOMAIN string = appCustomDomain

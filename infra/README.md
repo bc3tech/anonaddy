@@ -11,6 +11,8 @@ flowchart LR
   App[Container App: web]
   Mail[Container App: smtp/postfix]
   MySQL[Container App: mysql]
+  Redis[Container App: redis]
+  Scheduler[Container Apps Job: scheduler]
   Files[Azure Files]
   ACR[Azure Container Registry Basic]
   Logs[Log Analytics]
@@ -20,8 +22,13 @@ flowchart LR
   Internet -->|SMTP TCP 25| MX --> Mail
   App --> MySQL
   Mail --> MySQL
+  App --> Redis
+  Mail --> Redis
+  Scheduler --> MySQL
+  Scheduler --> Redis
   App --> Files
   Mail --> Files
+  Scheduler --> Files
   MySQL --> Files
   App --> ACS
   Mail --> ACS
@@ -37,10 +44,13 @@ flowchart LR
 - Azure Container Apps consumption is used for web and SMTP containers.
 - The web app defaults to `minReplicas = 0`.
 - The SMTP and MySQL apps also default to `minReplicas = 0` for cheapest deployment, but you should raise them to `1` if cold starts cause dropped SMTP connections or DB timeouts.
-- Redis is intentionally omitted. The Azure environment uses:
+- Redis runs as a small internal Container App because the application calls `Redis::throttle()` directly for email and alias rate limiting.
+- A scheduled Container Apps Job runs `php artisan schedule:run` every five minutes. This avoids an always-on scheduler container.
+- Dedicated queue workers are intentionally omitted. The Azure environment uses `QUEUE_CONNECTION=sync` to avoid an always-on worker replica.
+- The Azure environment uses:
   - `QUEUE_CONNECTION=sync`
-  - `CACHE_DRIVER=file`
-  - `SESSION_DRIVER=file`
+  - `CACHE_DRIVER=redis`
+  - `SESSION_DRIVER=redis`
 - MySQL runs as a container with Azure Files persistence to avoid the fixed cost of Azure Database for MySQL Flexible Server.
 
 ## Reliability tradeoffs

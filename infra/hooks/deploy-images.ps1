@@ -29,6 +29,7 @@ $registryEndpoint = Get-AzdValue 'AZURE_CONTAINER_REGISTRY_ENDPOINT'
 $resourceGroupName = Get-AzdValue 'RESOURCE_GROUP_NAME'
 $appName = Get-AzdValue 'APP_CONTAINER_APP_NAME'
 $mailName = Get-AzdValue 'MAIL_CONTAINER_APP_NAME'
+$schedulerJobName = Get-OptionalAzdValue 'SCHEDULER_CONTAINER_APP_JOB_NAME'
 $appCustomDomain = Get-OptionalAzdValue 'APP_CUSTOM_DOMAIN'
 $bindAppCustomDomain = (Get-OptionalAzdValue 'AZURE_BIND_APP_CUSTOM_DOMAIN') -eq 'true'
 
@@ -72,6 +73,19 @@ az containerapp update `
     --image $mailImage | Out-Host
 if ($LASTEXITCODE -ne 0) {
     throw "mail container update failed."
+}
+
+if (-not [string]::IsNullOrWhiteSpace($schedulerJobName)) {
+    Write-Host "Updating scheduler Container App Job '$schedulerJobName'..."
+    az containerapp job update `
+        --resource-group $resourceGroupName `
+        --name $schedulerJobName `
+        --image $appImage `
+        --command "php" `
+        --args "artisan" "schedule:run" | Out-Host
+    if ($LASTEXITCODE -ne 0) {
+        throw "scheduler job update failed."
+    }
 }
 
 Write-Host "Enabling external TCP ingress for mail Container App '$mailName'..."
