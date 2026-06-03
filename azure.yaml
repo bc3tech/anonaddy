@@ -12,9 +12,8 @@ services:
     resourceName: ${APP_CONTAINER_APP_NAME}
     resourceGroup: ${RESOURCE_GROUP_NAME}
     docker:
-      path: ./Dockerfile
+      path: ./docker/app/Dockerfile
       context: .
-      target: app-runtime
       platform: linux/amd64
       remoteBuild: true
   mail:
@@ -24,8 +23,7 @@ services:
     resourceName: ${MAIL_CONTAINER_APP_NAME}
     resourceGroup: ${RESOURCE_GROUP_NAME}
     docker:
-      path: ./Dockerfile
+      path: ./docker/mail/Dockerfile
       context: .
-      target: mail-runtime
       platform: linux/amd64
       remoteBuild: true

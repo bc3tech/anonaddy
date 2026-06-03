@@ -43,7 +43,7 @@ flowchart LR
 
 - Azure Container Apps consumption is used for web and SMTP containers.
 - The web app defaults to `minReplicas = 0`.
-- The SMTP and MySQL apps also default to `minReplicas = 0` for cheapest deployment, but you should raise them to `1` if cold starts cause dropped SMTP connections or DB timeouts.
+- The SMTP and MySQL apps default to `minReplicas = 0` for cheapest deployment, but you should raise them to `1` if cold starts cause dropped SMTP connections or DB timeouts.
 - Redis runs as a small internal Container App because the application calls `Redis::throttle()` directly for email and alias rate limiting.
 - A scheduled Container Apps Job runs `php artisan schedule:run` every five minutes. This avoids an always-on scheduler container.
 - Dedicated queue workers are intentionally omitted. The Azure environment uses `QUEUE_CONNECTION=sync` to avoid an always-on worker replica.
@@ -98,8 +98,8 @@ azd up
 
 `azure.yaml` defines first-class azd services for the two project-owned containers:
 
-- `app-runtime` -> `anonaddy-app`
-- `mail-runtime` -> `anonaddy-mail`
+- `docker/app/Dockerfile` -> app Container App
+- `docker/mail/Dockerfile` -> mail Container App
 
 Use normal azd commands after provisioning:
 
