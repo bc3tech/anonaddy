@@ -439,9 +439,19 @@ class ForwardEmail extends Mailable implements ShouldBeEncrypted, ShouldQueue
             });
 
         if ($this->emailText) {
+            $text = Utf8MojibakeRepair::unwindOutlookStyleMojibake(base64_decode($this->emailText));
+
             $this->email->text('emails.forward.text')->with([
-                'text' => Utf8MojibakeRepair::unwindOutlookStyleMojibake(base64_decode($this->emailText)),
+                'text' => $text,
             ]);
+
+            if (! $this->emailHtml) {
+                $this->bannerLocationText = 'off';
+
+                $this->email->view('emails.forward.html')->with([
+                    'html' => $this->plainTextAsHtml($text),
+                ]);
+            }
         }
 
         if ($this->emailHtml) {
@@ -610,6 +620,11 @@ class ForwardEmail extends Mailable implements ShouldBeEncrypted, ShouldQueue
             DisplayFromFormat::LEGACY => $displayFrom." '".$this->sender."'",
             default => str_replace('@', ' at ', $displayFrom." '".$this->sender."'"),
         };
+    }
+
+    private function plainTextAsHtml(string $text): string
+    {
+        return '<div style="white-space:pre-wrap !important;font-family:ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, \'Helvetica Neue\', Arial, \'Noto Sans\', sans-serif !important;">'.nl2br(e($text), false).'</div>';
     }
 
     private function isAlreadyEncrypted()

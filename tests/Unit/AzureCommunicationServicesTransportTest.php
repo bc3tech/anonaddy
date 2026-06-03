@@ -90,8 +90,13 @@ class AzureCommunicationServicesTransportTest extends TestCase
         Http::assertSent(function (Request $request): bool {
             $payload = $request->data();
 
-            $this->assertArrayNotHasKey('to', $payload['recipients']);
-            $this->assertSame([['address' => 'actual@example.com']], $payload['recipients']['bcc']);
+            $this->assertSame([
+                [
+                    'address' => 'actual@example.com',
+                    'displayName' => 'visible@example.com',
+                ],
+            ], $payload['recipients']['to']);
+            $this->assertArrayNotHasKey('bcc', $payload['recipients']);
 
             return true;
         });
@@ -130,7 +135,12 @@ class AzureCommunicationServicesTransportTest extends TestCase
 
             $this->assertSame('DoNotReply@anon.bc3.tech', $payload['senderAddress']);
             $this->assertSame([['address' => 'reply-token@anon.bc3.tech']], $payload['replyTo']);
-            $this->assertSame([['address' => 'hurlburb@microsoft.com']], $payload['recipients']['bcc']);
+            $this->assertSame([
+                [
+                    'address' => 'hurlburb@microsoft.com',
+                    'displayName' => 'visible-alias@b.anon.bc3.tech',
+                ],
+            ], $payload['recipients']['to']);
 
             return true;
         });
@@ -166,14 +176,19 @@ class AzureCommunicationServicesTransportTest extends TestCase
         Http::assertSent(function (Request $request): bool {
             $payload = $request->data();
 
-            $this->assertSame('DoNotReply@anon.bc3.tech', $payload['senderAddress']);
+            $this->assertSame('"Brandon at bc3.tech" <DoNotReply@anon.bc3.tech>', $payload['senderAddress']);
             $this->assertSame([
                 [
                     'address' => 'first+brandon=bc3.tech@b.anon.bc3.tech',
                     'displayName' => 'Brandon at bc3.tech',
                 ],
             ], $payload['replyTo']);
-            $this->assertSame([['address' => 'hurlburb@microsoft.com']], $payload['recipients']['bcc']);
+            $this->assertSame([
+                [
+                    'address' => 'hurlburb@microsoft.com',
+                    'displayName' => 'visible-alias@b.anon.bc3.tech',
+                ],
+            ], $payload['recipients']['to']);
 
             return true;
         });

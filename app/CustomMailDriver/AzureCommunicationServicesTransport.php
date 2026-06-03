@@ -77,7 +77,7 @@ class AzureCommunicationServicesTransport extends AbstractTransport
         }
 
         $payload = [
-            'senderAddress' => $this->senderAddress ?? $from->getAddress(),
+            'senderAddress' => $this->senderAddress($from),
             'recipients' => $recipients,
             'content' => [
                 'subject' => $email->getSubject() ?? '',
@@ -129,6 +129,12 @@ class AzureCommunicationServicesTransport extends AbstractTransport
 
         foreach (array_keys($envelopeRecipients) as $address) {
             if (! $this->addressInPayload($address, $recipients) && ! $this->addressInList($address, $bcc)) {
+                if ($recipients === [] && $bcc === []) {
+                    $recipients['to'][] = $this->envelopeOnlyRecipient($envelopeRecipients[$address], $email);
+
+                    continue;
+                }
+
                 $bcc[] = ['address' => $envelopeRecipients[$address]->getAddress()];
             }
         }
@@ -200,6 +206,34 @@ class AzureCommunicationServicesTransport extends AbstractTransport
         }
 
         return [$this->acsAddress($from)];
+    }
+
+    private function senderAddress(Address $from): string
+    {
+        if ($this->senderAddress === null) {
+            return $from->getAddress();
+        }
+
+        if ($from->getName() === '' || strcasecmp($this->senderAddress, $from->getAddress()) === 0) {
+            return $this->senderAddress;
+        }
+
+        return (new Address($this->senderAddress, $from->getName()))->toString();
+    }
+
+    /**
+     * @return array{address: string, displayName?: string}
+     */
+    private function envelopeOnlyRecipient(Address $recipient, Email $email): array
+    {
+        $acsRecipient = ['address' => $recipient->getAddress()];
+        $visibleRecipient = Arr::first($email->getTo());
+
+        if ($visibleRecipient instanceof Address) {
+            $acsRecipient['displayName'] = $visibleRecipient->getAddress();
+        }
+
+        return $acsRecipient;
     }
 
     /**
