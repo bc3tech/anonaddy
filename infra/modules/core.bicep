@@ -109,7 +109,6 @@ resource acrPush 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!emp
   scope: acr
   properties: {
     principalId: principalId
-    principalType: 'ServicePrincipal'
     roleDefinitionId: acrPushRoleDefinitionId
   }
 }

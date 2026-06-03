@@ -82,9 +82,13 @@ RUN mkdir -p storage/framework/{cache,sessions,views,testing} storage/logs boots
 
 COPY docker/nginx/default.conf /etc/nginx/http.d/default.conf
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY docker/app/entrypoint.sh /usr/local/bin/anonaddy-app-entrypoint
+
+RUN chmod +x /usr/local/bin/anonaddy-app-entrypoint
 
 EXPOSE 80
 
+ENTRYPOINT ["/usr/local/bin/anonaddy-app-entrypoint"]
 CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
 
 FROM app-runtime AS mail-runtime

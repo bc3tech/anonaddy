@@ -422,7 +422,12 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
             cpu: json('0.25')
             memory: '0.5Gi'
           }
-          env: commonEnv
+          env: concat(commonEnv, [
+            {
+              name: 'RUN_MIGRATIONS_ON_START'
+              value: 'true'
+            }
+          ])
           volumeMounts: [
             {
               volumeName: 'app-storage'

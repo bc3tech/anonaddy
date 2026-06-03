@@ -60,9 +60,7 @@ Write-Host "Updating app Container App '$appName'..."
 az containerapp update `
     --resource-group $resourceGroupName `
     --name $appName `
-    --image $appImage `
-    --command "sh" "-c" `
-    --args "mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/framework/testing storage/logs && php artisan migrate --force && php artisan storage:link --force && /usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.conf" | Out-Host
+    --image $appImage | Out-Host
 if ($LASTEXITCODE -ne 0) {
     throw "app container update failed."
 }
@@ -71,9 +69,7 @@ Write-Host "Updating mail Container App '$mailName'..."
 az containerapp update `
     --resource-group $resourceGroupName `
     --name $mailName `
-    --image $mailImage `
-    --command "sh" "-c" `
-    --args "mkdir -p /var/www/html/storage/framework/cache /var/www/html/storage/framework/sessions /var/www/html/storage/framework/views /var/www/html/storage/framework/testing /var/www/html/storage/logs && /usr/local/bin/anonaddy-mail-entrypoint" | Out-Host
+    --image $mailImage | Out-Host
 if ($LASTEXITCODE -ne 0) {
     throw "mail container update failed."
 }
