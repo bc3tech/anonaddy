@@ -64,11 +64,7 @@ class AzureCommunicationServicesTransport extends AbstractTransport
      */
     private function payload(Email $email, Envelope $envelope): array
     {
-        $from = Arr::first($email->getFrom());
-
-        if (! $from instanceof Address) {
-            throw new TransportException('Azure Communication Services requires a sender address.');
-        }
+        $from = $this->resolveFromAddress($email);
 
         $recipients = $this->recipients($email, $envelope);
 
@@ -105,6 +101,17 @@ class AzureCommunicationServicesTransport extends AbstractTransport
         }
 
         return $payload;
+    }
+
+    private function resolveFromAddress(Email $email): Address
+    {
+        $from = Arr::first($email->getFrom());
+
+        if (! $from instanceof Address) {
+            throw new TransportException('Azure Communication Services requires a sender address.');
+        }
+
+        return $from;
     }
 
     /**

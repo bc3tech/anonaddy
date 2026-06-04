@@ -219,6 +219,30 @@ class AzureCommunicationServicesTransportTest extends TestCase
         $transport->send($email);
     }
 
+    #[Test]
+    public function it_throws_a_clear_error_when_the_email_has_no_from_address(): void
+    {
+        Http::preventStrayRequests();
+        Http::fake([
+            'https://example.communication.azure.com/emails:send*' => Http::response([], 202),
+        ]);
+
+        $transport = new AzureCommunicationServicesTransport(
+            'https://example.communication.azure.com',
+            base64_encode('test-key'),
+        );
+
+        $email = (new Email)
+            ->to('first@example.com')
+            ->subject('Verify your email')
+            ->text('Plain body');
+
+        $this->expectException(TransportExceptionInterface::class);
+        $this->expectExceptionMessage('Azure Communication Services requires a sender address.');
+
+        $transport->send($email);
+    }
+
     private function assertRequestIsSigned(Request $request): void
     {
         $date = $request->header('x-ms-date')[0];
