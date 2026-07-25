@@ -20,7 +20,6 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-"${SCRIPT_DIR}/ensure-gh-copilot-cli.sh"
 "${SCRIPT_DIR}/ensure-digital-twin-plugin.sh"
 "${SCRIPT_DIR}/ensure-shell-aliases.sh"
 

@@ -27,8 +27,7 @@
         "esbenp.prettier-vscode",
         "bradlc.vscode-tailwindcss",
         "editorconfig.editorconfig",
-        "github.copilot",
-        "github.copilot-chat"
+        "github.copilot"
       ],
       "settings": {
         "terminal.integrated.defaultProfile.linux": "pwsh"
