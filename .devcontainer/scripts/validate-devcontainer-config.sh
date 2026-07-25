@@ -75,11 +75,17 @@ if ! jq empty "${DEVCONTAINER_FILE}" 2>/dev/null; then
 fi
 check_pass "devcontainer.json is valid JSON"
 
-# 3. Image field
+# 3. Image or build field
 image=$(jq -r '.image // empty' "${DEVCONTAINER_FILE}")
-if [ -z "$image" ]; then
-    check_fail "missing required field: image"
-else
+dockerfile=$(jq -r '.build.dockerfile // empty' "${DEVCONTAINER_FILE}")
+if [ -n "$dockerfile" ]; then
+    dockerfile_path="$(dirname "${DEVCONTAINER_FILE}")/${dockerfile}"
+    if [ -f "$dockerfile_path" ]; then
+        check_pass "build.dockerfile field present: $dockerfile"
+    else
+        check_fail "build.dockerfile references missing file: $dockerfile_path"
+    fi
+elif [ -n "$image" ]; then
     check_pass "image field present: $image"
 
     if image_exists "$image"; then
@@ -92,6 +98,8 @@ else
             check_fail "image not found or inaccessible in registry: $image"
         fi
     fi
+else
+    check_fail "missing required field: image or build.dockerfile"
 fi
 
 # 4. Features section
