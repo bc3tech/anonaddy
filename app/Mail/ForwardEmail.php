@@ -262,6 +262,14 @@ class ForwardEmail extends Mailable implements ShouldBeEncrypted, ShouldQueue
             $this->fromEmail = $this->alias->local_part.'+'.Str::replaceLast('@', '=', $this->replyToAddress).'@'.$this->alias->domain;
         }
 
+        if ($this->shouldForceConfiguredForwardSender()) {
+            if (! isset($replyToEmail)) {
+                $replyToEmail = $this->fromEmail;
+            }
+
+            $this->fromEmail = config('mail.from.address');
+        }
+
         if ($this->alias->isCustomDomain()) {
             if (! $this->alias->aliasable->isVerifiedForSending()) {
                 if (! isset($replyToEmail)) {
@@ -635,6 +643,17 @@ class ForwardEmail extends Mailable implements ShouldBeEncrypted, ShouldQueue
     private function needsDkimSignature()
     {
         return $this->alias->isCustomDomain() ? $this->alias->aliasable->isVerifiedForSending() : false;
+    }
+
+    private function shouldForceConfiguredForwardSender(): bool
+    {
+        $configuredSender = config('mail.from.address');
+
+        if (! is_string($configuredSender) || $configuredSender === '') {
+            return false;
+        }
+
+        return config('mail.default') === 'acs' && $this->resendFromEmail === null;
     }
 
     /**

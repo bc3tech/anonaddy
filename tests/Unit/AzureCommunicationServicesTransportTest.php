@@ -141,6 +141,10 @@ class AzureCommunicationServicesTransportTest extends TestCase
                     'displayName' => 'visible-alias@b.anon.bc3.tech',
                 ],
             ], $payload['recipients']['to']);
+            $this->assertArrayHasKey('From', $payload['headers']);
+            $this->assertArrayHasKey('To', $payload['headers']);
+            $this->assertStringContainsString('brandon@bc3.tech', $payload['headers']['From']);
+            $this->assertStringContainsString('visible-alias@b.anon.bc3.tech', $payload['headers']['To']);
 
             return true;
         });
@@ -189,6 +193,39 @@ class AzureCommunicationServicesTransportTest extends TestCase
                     'displayName' => 'visible-alias@b.anon.bc3.tech',
                 ],
             ], $payload['recipients']['to']);
+
+            return true;
+        });
+    }
+
+    #[Test]
+    public function it_includes_from_header_when_display_name_is_present_on_configured_sender(): void
+    {
+        Http::preventStrayRequests();
+        Http::fake([
+            'https://example.communication.azure.com/emails:send*' => Http::response([], 202),
+        ]);
+
+        $transport = new AzureCommunicationServicesTransport(
+            'https://example.communication.azure.com',
+            base64_encode('test-key'),
+            'forwarded-by@anon.bc3.tech',
+        );
+
+        $email = (new Email)
+            ->from(new Address('forwarded-by@anon.bc3.tech', 'Kizik customerservice@kizik.com'))
+            ->to('recipient@example.com')
+            ->subject('Forwarded message')
+            ->text('Forwarded body');
+
+        $transport->send($email);
+
+        Http::assertSent(function (Request $request): bool {
+            $payload = $request->data();
+
+            $this->assertArrayHasKey('From', $payload['headers']);
+            $this->assertStringContainsString('Kizik customerservice@kizik.com', $payload['headers']['From']);
+            $this->assertStringContainsString('forwarded-by@anon.bc3.tech', $payload['headers']['From']);
 
             return true;
         });

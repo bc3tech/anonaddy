@@ -40,15 +40,7 @@ class AzureCommunicationServicesTransport extends AbstractTransport
         }
 
         $payload = $this->payload($email, $message->getEnvelope());
-        $body = json_encode($payload, JSON_THROW_ON_ERROR);
-        $pathAndQuery = '/emails:send?api-version='.$this->apiVersion;
-        $headers = $this->headers($body, $pathAndQuery);
-
-        $response = Http::timeout($this->timeout)
-            ->connectTimeout($this->connectTimeout)
-            ->withBody($body, 'application/json')
-            ->withHeaders($headers)
-            ->post($this->url($pathAndQuery));
+        $response = $this->sendPayload($payload);
 
         if (! $response->successful()) {
             throw new TransportException('Azure Communication Services rejected the email: '.$response->status().' '.$response->body());
@@ -302,6 +294,10 @@ class AzureCommunicationServicesTransport extends AbstractTransport
             'to',
         ];
 
+        if ($this->shouldIncludeDisplayHeaders($email)) {
+            $excluded = array_diff($excluded, ['from', 'to']);
+        }
+
         foreach ($email->getHeaders()->all() as $header) {
             $name = $header->getName();
 
@@ -313,6 +309,25 @@ class AzureCommunicationServicesTransport extends AbstractTransport
         }
 
         return $headers;
+    }
+
+    private function shouldIncludeDisplayHeaders(Email $email): bool
+    {
+        if ($this->senderAddress === null) {
+            return false;
+        }
+
+        $from = Arr::first($email->getFrom());
+
+        if (! $from instanceof Address) {
+            return false;
+        }
+
+        if ($from->getName() !== '') {
+            return true;
+        }
+
+        return strcasecmp($this->senderAddress, $from->getAddress()) !== 0;
     }
 
     /**
@@ -391,5 +406,21 @@ class AzureCommunicationServicesTransport extends AbstractTransport
         }
 
         return basename(parse_url($operationLocation, PHP_URL_PATH) ?: $operationLocation);
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function sendPayload(array $payload): Response
+    {
+        $body = json_encode($payload, JSON_THROW_ON_ERROR);
+        $pathAndQuery = '/emails:send?api-version='.$this->apiVersion;
+        $headers = $this->headers($body, $pathAndQuery);
+
+        return Http::timeout($this->timeout)
+            ->connectTimeout($this->connectTimeout)
+            ->withBody($body, 'application/json')
+            ->withHeaders($headers)
+            ->post($this->url($pathAndQuery));
     }
 }
