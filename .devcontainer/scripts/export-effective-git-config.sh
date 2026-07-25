@@ -71,8 +71,8 @@ skipped_count=0
 exported_count=0
 
 while IFS= read -r -d '' entry; do
-    key="${entry%%=*}"
-    value="${entry#*=}"
+    key="${entry%%$'\n'*}"
+    value="${entry#*$'\n'}"
 
     # Guard against malformed rows.
     if [ -z "${key}" ] || [ "${key}" = "${entry}" ]; then
