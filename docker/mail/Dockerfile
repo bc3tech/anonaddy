@@ -38,6 +38,7 @@ RUN cd postfix && CACHE_DRIVER=file composer install --no-interaction --prefer-d
 FROM node:24-alpine AS assets
 WORKDIR /src
 ARG APP_URL=http://localhost
+ENV NPM_CONFIG_REGISTRY=https://packagefeedproxy.microsoft.io/npm/
 COPY package*.json ./
 RUN npm ci --no-audit --no-fund
 COPY . .
