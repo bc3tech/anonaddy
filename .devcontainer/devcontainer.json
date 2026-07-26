@@ -43,8 +43,8 @@
   "containerEnv": {
     "POWERSHELL_DISTRIBUTION_CHANNEL": "DevContainers"
   },
-  "initializeCommand": "bash .devcontainer/scripts/export-effective-git-config.sh",
-  "postCreateCommand": "bash .devcontainer/scripts/bootstrap-ghcp-digital-twin.sh",
-  "postStartCommand": "bash .devcontainer/scripts/apply-global-git-config.sh .devcontainer/gitconfig.effective",
+  "initializeCommand": "pwsh -File .devcontainer/scripts/export-effective-git-config.ps1",
+  "postCreateCommand": ".devcontainer/scripts/bootstrap-ghcp-digital-twin.sh",
+  "postStartCommand": ".devcontainer/scripts/apply-global-git-config.sh .devcontainer/gitconfig.effective",
   "remoteUser": "vscode"
 }
