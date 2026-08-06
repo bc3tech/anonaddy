@@ -307,7 +307,7 @@ class RulesTest extends TestCase
 
         $email = $job->build();
 
-        $this->assertEquals('New Subject!', $email->subject);
+        $this->assertEquals('Will <will@anonaddy.com> - New Subject!', $email->subject);
 
         $this->assertDatabaseHas('rules', [
             'id' => $rule->id,
@@ -470,7 +470,7 @@ class RulesTest extends TestCase
 
         $email = $job->build();
 
-        $this->assertEquals($parser->getHeader('subject'), $email->subject);
+        $this->assertEquals('Will <will@anonaddy.com> - '.$parser->getHeader('subject'), $email->subject);
 
         $this->assertDatabaseHas('rules', [
             'id' => $rule->id,
@@ -567,7 +567,7 @@ class RulesTest extends TestCase
 
         $email = $job->build();
 
-        $this->assertEquals('Applied after', $email->subject);
+        $this->assertEquals('Will <will@anonaddy.com> - Applied after', $email->subject);
     }
 
     #[Test]

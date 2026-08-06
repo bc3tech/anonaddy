@@ -498,6 +498,8 @@ class ForwardEmail extends Mailable implements ShouldBeEncrypted, ShouldQueue
             $this->applyRulesByIds($this->ruleIds);
         }
 
+        $this->email->subject = $this->subjectWithOriginalSender($this->email->subject);
+
         $this->email->with([
             'locationText' => $this->bannerLocationText,
             'locationHtml' => $this->bannerLocationHtml,
@@ -654,6 +656,17 @@ class ForwardEmail extends Mailable implements ShouldBeEncrypted, ShouldQueue
         }
 
         return config('mail.default') === 'acs' && $this->resendFromEmail === null;
+    }
+
+    private function subjectWithOriginalSender(string $subject): string
+    {
+        $displayFrom = base64_decode($this->displayFrom);
+
+        if (! is_string($displayFrom) || $displayFrom === '' || $displayFrom === $this->sender) {
+            return '<'.$this->sender.'> - '.$subject;
+        }
+
+        return $displayFrom.' <'.$this->sender.'> - '.$subject;
     }
 
     /**
