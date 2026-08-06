@@ -43,7 +43,7 @@ flowchart LR
 
 - Azure Container Apps consumption is used for web and SMTP containers.
 - The web app defaults to `minReplicas = 0`.
-- The SMTP app defaults to `minReplicas = 0` for cheapest deployment, but you should raise it to `1` if cold starts cause dropped SMTP connections.
+- The SMTP app defaults to `minReplicas = 1` to ensure SMTP acceptance functions properly. **Do not lower this to 0**—cold starts cause mail delivery to fail or become unreliable, which is unacceptable for an email forwarding service.
 - MySQL defaults to `minReplicas = 1` to avoid DB cold-start connection failures during user requests.
 - Redis runs as a small internal Container App because the application calls `Redis::throttle()` directly for email and alias rate limiting.
 - A scheduled Container Apps Job runs `php artisan schedule:run` every five minutes. This avoids an always-on scheduler container.

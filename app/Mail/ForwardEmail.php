@@ -498,7 +498,7 @@ class ForwardEmail extends Mailable implements ShouldBeEncrypted, ShouldQueue
             $this->applyRulesByIds($this->ruleIds);
         }
 
-        $this->email->subject = $this->subjectWithOriginalSender($this->email->subject);
+        $this->email->subject($this->subjectWithOriginalSender($this->email->subject));
 
         $this->email->with([
             'locationText' => $this->bannerLocationText,

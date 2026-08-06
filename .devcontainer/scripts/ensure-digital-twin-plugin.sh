@@ -45,8 +45,8 @@ if is_installed; then
 fi
 
 echo "Installing Digital Twin plugin from ${DIGITAL_TWIN_PLUGIN_SOURCE} ..."
-git fetch --depth=1 "${DIGITAL_TWIN_PLUGIN_SOURCE}" 2>/dev/null || {
-    echo "Error: failed to fetch Digital Twin plugin from ${DIGITAL_TWIN_PLUGIN_SOURCE}" >&2
+git ls-remote "${DIGITAL_TWIN_PLUGIN_SOURCE}" HEAD >/dev/null 2>&1 || {
+    echo "Error: failed to reach Digital Twin plugin source at ${DIGITAL_TWIN_PLUGIN_SOURCE}" >&2
     exit 1
 }
 run_copilot plugin install "${DIGITAL_TWIN_PLUGIN_SOURCE}"

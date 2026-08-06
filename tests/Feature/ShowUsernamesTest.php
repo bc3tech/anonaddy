@@ -66,9 +66,9 @@ class ShowUsernamesTest extends TestCase
                 ->etc()
             )
         );
-        $this->assertTrue($response->data('page')['props']['initialRows'][1]['id'] === $b->id);
-        $this->assertTrue($response->data('page')['props']['initialRows'][2]['id'] === $c->id);
-        $this->assertTrue($response->data('page')['props']['initialRows'][3]['id'] === $a->id);
+        $this->assertSame($b->id, $response->data('page')['props']['initialRows'][1]['id']);
+        $this->assertSame($c->id, $response->data('page')['props']['initialRows'][2]['id']);
+        $this->assertSame($a->id, $response->data('page')['props']['initialRows'][3]['id']);
     }
 
     #[Test]
