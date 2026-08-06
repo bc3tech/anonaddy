@@ -9,6 +9,7 @@ use App\Models\Alias;
 use App\Models\EmailData;
 use App\Models\Recipient;
 use App\Notifications\FailedDeliveryNotification;
+use App\Support\MailRemoteMta;
 use App\Traits\ApplyUserRules;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeEncrypted;
@@ -261,6 +262,14 @@ class ForwardEmail extends Mailable implements ShouldBeEncrypted, ShouldQueue
             $this->fromEmail = $this->alias->local_part.'+'.Str::replaceLast('@', '=', $this->replyToAddress).'@'.$this->alias->domain;
         }
 
+        if ($this->shouldForceConfiguredForwardSender()) {
+            if (! isset($replyToEmail)) {
+                $replyToEmail = $this->fromEmail;
+            }
+
+            $this->fromEmail = config('mail.from.address');
+        }
+
         if ($this->alias->isCustomDomain()) {
             if (! $this->alias->aliasable->isVerifiedForSending()) {
                 if (! isset($replyToEmail)) {
@@ -438,9 +447,19 @@ class ForwardEmail extends Mailable implements ShouldBeEncrypted, ShouldQueue
             });
 
         if ($this->emailText) {
+            $text = Utf8MojibakeRepair::unwindOutlookStyleMojibake(base64_decode($this->emailText));
+
             $this->email->text('emails.forward.text')->with([
-                'text' => Utf8MojibakeRepair::unwindOutlookStyleMojibake(base64_decode($this->emailText)),
+                'text' => $text,
             ]);
+
+            if (! $this->emailHtml) {
+                $this->bannerLocationText = 'off';
+
+                $this->email->view('emails.forward.html')->with([
+                    'html' => $this->plainTextAsHtml($text),
+                ]);
+            }
         }
 
         if ($this->emailHtml) {
@@ -478,6 +497,8 @@ class ForwardEmail extends Mailable implements ShouldBeEncrypted, ShouldQueue
         if ($this->ruleIds) {
             $this->applyRulesByIds($this->ruleIds);
         }
+
+        $this->email->subject($this->subjectWithOriginalSender($this->email->subject));
 
         $this->email->with([
             'locationText' => $this->bannerLocationText,
@@ -533,7 +554,7 @@ class ForwardEmail extends Mailable implements ShouldBeEncrypted, ShouldQueue
             'recipient_id' => $this->recipientId,
             'alias_id' => $this->alias->id,
             'bounce_type' => null,
-            'remote_mta' => config('mail.mailers.smtp.host'),
+            'remote_mta' => MailRemoteMta::forConfiguredMailer(),
             'sender' => $this->sender,
             'email_type' => 'F',
             'status' => null,
@@ -611,6 +632,11 @@ class ForwardEmail extends Mailable implements ShouldBeEncrypted, ShouldQueue
         };
     }
 
+    private function plainTextAsHtml(string $text): string
+    {
+        return '<div style="white-space:pre-wrap !important;font-family:ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, \'Helvetica Neue\', Arial, \'Noto Sans\', sans-serif !important;">'.nl2br(e($text), false).'</div>';
+    }
+
     private function isAlreadyEncrypted()
     {
         return $this->encryptedParts || $this->isInlineEncrypted;
@@ -619,6 +645,28 @@ class ForwardEmail extends Mailable implements ShouldBeEncrypted, ShouldQueue
     private function needsDkimSignature()
     {
         return $this->alias->isCustomDomain() ? $this->alias->aliasable->isVerifiedForSending() : false;
+    }
+
+    private function shouldForceConfiguredForwardSender(): bool
+    {
+        $configuredSender = config('mail.from.address');
+
+        if (! is_string($configuredSender) || $configuredSender === '') {
+            return false;
+        }
+
+        return config('mail.default') === 'acs' && $this->resendFromEmail === null;
+    }
+
+    private function subjectWithOriginalSender(string $subject): string
+    {
+        $displayFrom = base64_decode($this->displayFrom);
+
+        if (! is_string($displayFrom) || $displayFrom === '' || $displayFrom === $this->sender) {
+            return '<'.$this->sender.'> - '.$subject;
+        }
+
+        return $displayFrom.' <'.$this->sender.'> - '.$subject;
     }
 
     /**

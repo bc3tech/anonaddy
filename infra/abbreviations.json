@@ -1,0 +1,11 @@
+{
+  "appManagedEnvironments": "cae-",
+  "appContainerApps": "ca-",
+  "containerRegistryRegistries": "cr",
+  "managedIdentityUserAssignedIdentities": "id-",
+  "operationalInsightsWorkspaces": "log-",
+  "storageStorageAccounts": "st",
+  "networkVirtualNetworks": "vnet-",
+  "networkVirtualNetworksSubnets": "snet-"
+}
+

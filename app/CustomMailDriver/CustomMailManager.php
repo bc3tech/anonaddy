@@ -4,6 +4,7 @@ namespace App\CustomMailDriver;
 
 use Illuminate\Mail\MailManager;
 use InvalidArgumentException;
+use Symfony\Component\Mailer\Transport\TransportInterface;
 
 class CustomMailManager extends MailManager
 {
@@ -43,5 +44,26 @@ class CustomMailManager extends MailManager
         }
 
         return $mailer;
+    }
+
+    /**
+     * Create an Azure Communication Services transport instance.
+     *
+     * @param  array<string, mixed>  $config
+     */
+    protected function createAcsTransport(array $config): TransportInterface
+    {
+        if (empty($config['endpoint']) || empty($config['access_key'])) {
+            throw new InvalidArgumentException('Azure Communication Services mailer requires MAIL_ACS_ENDPOINT and MAIL_ACS_ACCESS_KEY.');
+        }
+
+        return new AzureCommunicationServicesTransport(
+            $config['endpoint'],
+            $config['access_key'],
+            $this->app['config']->get('mail.from.address'),
+            $config['api_version'] ?? '2023-03-31',
+            $config['timeout'] ?? 60,
+            $config['connect_timeout'] ?? 10,
+        );
     }
 }

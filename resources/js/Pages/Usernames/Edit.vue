@@ -39,7 +39,7 @@
           <p class="mt-1 text-base text-grey-700 dark:text-grey-200">
             The 'From Name' is shown when you send an email from an alias or reply anonymously to a
             forwarded email. If left blank, then the email alias itself will be used as the 'From
-            Name' e.g. "example@{{ username.username }}.anonaddy.com".
+            Name' e.g. "example@{{ username.username }}.{{ domainName }}".
           </p>
           <div class="mt-2 text-base text-grey-700 dark:text-grey-200">
             The 'From Name' that is used for an alias is determined by the following
@@ -268,7 +268,7 @@
                   </div>
                   <span
                     class="inline-flex items-center rounded-r-md border border-l-0 border-grey-300 px-3 text-grey-500 sm:text-sm dark:text-grey-300"
-                    >@{{ username.username }}.anonaddy.com</span
+                    >@{{ username.username }}.{{ domainName }}</span
                   >
                 </div>
               </div>
@@ -330,6 +330,10 @@ import Toggle from '../../Components/Toggle.vue'
 const props = defineProps({
   initialUsername: {
     type: Object,
+    required: true,
+  },
+  domainName: {
+    type: String,
     required: true,
   },
 })

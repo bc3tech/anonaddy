@@ -7,7 +7,6 @@ use App\Models\Recipient;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\App;
 use Illuminate\View\View;
 
 class ForgotUsernameController extends Controller
@@ -58,14 +57,6 @@ class ForgotUsernameController extends Controller
      */
     protected function validateEmail(Request $request)
     {
-        if (! App::environment('testing')) {
-            $request->validate([
-                'captcha' => 'required|captcha',
-            ], [
-                'captcha.captcha' => 'The text entered was incorrect, please try again.',
-            ]);
-        }
-
         $request->validate(['email' => 'required|string|ascii|max:254|email:rfc']);
     }
 }

@@ -8,7 +8,6 @@ use Illuminate\Foundation\Auth\SendsPasswordResetEmails;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Password;
 
 class ForgotPasswordController extends Controller
@@ -68,15 +67,6 @@ class ForgotPasswordController extends Controller
      */
     protected function validateUsername(Request $request)
     {
-        // Validate captcha separately first to prevent username enumeration
-        if (! App::environment('testing')) {
-            $request->validate([
-                'captcha' => 'required|captcha',
-            ], [
-                'captcha.captcha' => 'The text entered was incorrect, please try again.',
-            ]);
-        }
-
         $request->validate(['username' => 'required|regex:/^[a-zA-Z0-9]*$/|max:20'], [
             'username.regex' => 'Your username can only contain letters and numbers, do not use your email.',
         ]);

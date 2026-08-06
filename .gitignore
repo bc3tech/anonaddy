@@ -28,3 +28,6 @@ ray.php
 .husky/pre-commit
 Envoy.blade.php
 scripts/envoy-sync-staged.sh
+infra/**/*.json
+!infra/**/*.parameters.json
+.devcontainer/gitconfig.effective

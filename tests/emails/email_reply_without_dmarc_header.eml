@@ -1,0 +1,10 @@
+Date: Wed, 20 Feb 2019 15:00:00 +0100 (CET)
+From: Will <will@anonaddy.com>
+To: <ebay+contact=ebay.com@johndoe.anonaddy.com>
+Subject: RE: Test Email
+In-Reply-To: <9f2ada5308f1a3f88515a370504a66b3@swift.generated>
+Content-Type: text/plain; charset=UTF-8
+
+Hi,
+
+This is a reply without the X-AnonAddy-Dmarc-Allow header.

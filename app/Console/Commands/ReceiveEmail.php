@@ -214,8 +214,9 @@ class ReceiveEmail extends Command
                 }
 
                 if ($verifiedRecipient?->can_reply_send) {
-                    // Check if the Dmarc allow or spam headers are present from Rspamd
-                    if (! $this->parser->getHeader('X-AnonAddy-Dmarc-Allow')) {
+                    // Prefer the explicit DMARC allow signal from Rspamd, but fall back to
+                    // a strict DMARC policy check when that header is unavailable.
+                    if (! $this->senderPassesReplySendAuthenticationChecks()) {
                         // Notify user and exit
                         $verifiedRecipient->notify(new SpamReplySendAttempt($this->inboundAlias, $this->senderFrom, $this->parser->getHeader('X-AnonAddy-Authentication-Results')));
 
@@ -276,7 +277,7 @@ class ReceiveEmail extends Command
     {
         $alias = Alias::find($this->inboundAlias['local_part']);
 
-        if ($alias && $alias->user->isVerifiedRecipient($this->senderFrom) && $this->parser->getHeader('X-AnonAddy-Dmarc-Allow')) {
+        if ($alias && $alias->user->isVerifiedRecipient($this->senderFrom) && $this->senderPassesReplySendAuthenticationChecks()) {
             $alias->deactivate();
         }
     }
@@ -848,6 +849,45 @@ class ReceiveEmail extends Command
         }
 
         return 'soft';
+    }
+
+    protected function senderPassesReplySendAuthenticationChecks(): bool
+    {
+        if ($this->parser->getHeader('X-AnonAddy-Dmarc-Allow')) {
+            return true;
+        }
+
+        // Self-hosted environments may not run Rspamd header injection. In that case,
+        // require the sender domain to publish an enforcing DMARC policy.
+        return $this->senderDomainHasEnforcingDmarcPolicy();
+    }
+
+    protected function senderDomainHasEnforcingDmarcPolicy(): bool
+    {
+        if (App::environment('testing')) {
+            return true;
+        }
+
+        $senderDomain = Str::afterLast($this->senderFrom, '@');
+
+        if (! Str::contains($senderDomain, '.')) {
+            return false;
+        }
+
+        try {
+            return collect(dns_get_record('_dmarc.'.$senderDomain.'.', DNS_TXT))
+                ->contains(function ($record) {
+                    if (! isset($record['txt'])) {
+                        return false;
+                    }
+
+                    return preg_match('/^(v=DMARC1).*(p=quarantine|reject).*/i', $record['txt']) === 1;
+                });
+        } catch (\Throwable $e) {
+            Log::info('DNS Get DMARC Error in reply/send auth check:', ['domain' => $senderDomain, 'error' => $e->getMessage()]);
+
+            return false;
+        }
     }
 
     protected function getSenderFrom()

@@ -1,0 +1,129 @@
+services:
+  app:
+    platform: linux/amd64,linux/arm64
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: app-runtime
+    image: registry.bc3.tech/anonaddy/anonaddy-app:latest
+    env_file:
+      - .env
+    ports:
+      - "8080:80"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - app-storage:/var/www/html/storage
+      - mail-logs:/var/log/mail:ro
+    restart: unless-stopped
+
+  queue:
+    platform: linux/amd64,linux/arm64
+    image: registry.bc3.tech/anonaddy/anonaddy-app:latest
+    env_file:
+      - .env
+    command: sh -c "php artisan queue:work --tries=3 --timeout=600 --memory=512"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - app-storage:/var/www/html/storage
+    restart: unless-stopped
+
+  scheduler:
+    platform: linux/amd64,linux/arm64
+    image: registry.bc3.tech/anonaddy/anonaddy-app:latest
+    env_file:
+      - .env
+    command: sh -c "while true; do php artisan schedule:run --verbose --no-interaction; sleep 60; done"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - app-storage:/var/www/html/storage
+      - mail-logs:/var/log/mail:ro
+    restart: unless-stopped
+
+  migrate:
+    platform: linux/amd64,linux/arm64
+    image: registry.bc3.tech/anonaddy/anonaddy-app:latest
+    env_file:
+      - .env
+    command: sh -c "php artisan migrate --force && php artisan storage:link --force"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    profiles:
+      - setup
+
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-anonaddy}
+      MYSQL_USER: ${DB_USERNAME:-anonaddy}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootsecret}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+
+  mail:
+    platform: linux/amd64,linux/arm64
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: mail-runtime
+    image: registry.bc3.tech/anonaddy/anonaddy-mail:latest
+    env_file:
+      - .env
+    hostname: ${ANONADDY_HOSTNAME:-mail.example.com}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    ports:
+      - "25:25"
+    volumes:
+      - app-storage:/var/www/html/storage
+      - mail-certs:/etc/postfix/certs
+      - mail-logs:/var/log/mail
+      - mail-spool:/var/spool/postfix
+    restart: unless-stopped
+
+volumes:
+  app-storage:
+  mail-certs:
+  mail-logs:
+  mail-spool:
+  mysql-data:
+  redis-data:
+
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: ${DOCKER_SUBNET:-172.28.0.0/16}

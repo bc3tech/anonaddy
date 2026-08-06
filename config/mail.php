@@ -46,6 +46,15 @@ return [
             'verify_peer' => env('MAIL_VERIFY_PEER', false),
         ],
 
+        'acs' => [
+            'transport' => 'acs',
+            'endpoint' => env('MAIL_ACS_ENDPOINT'),
+            'access_key' => env('MAIL_ACS_ACCESS_KEY'),
+            'api_version' => env('MAIL_ACS_API_VERSION', '2023-03-31'),
+            'timeout' => (int) env('MAIL_ACS_TIMEOUT', 60),
+            'connect_timeout' => (int) env('MAIL_ACS_CONNECT_TIMEOUT', 10),
+        ],
+
         'ses' => [
             'transport' => 'ses',
         ],

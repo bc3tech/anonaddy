@@ -66,8 +66,28 @@ class ShowUsernamesTest extends TestCase
                 ->etc()
             )
         );
-        $this->assertTrue($response->data('page')['props']['initialRows'][1]['id'] === $b->id);
-        $this->assertTrue($response->data('page')['props']['initialRows'][2]['id'] === $c->id);
-        $this->assertTrue($response->data('page')['props']['initialRows'][3]['id'] === $a->id);
+        $this->assertSame($b->id, $response->data('page')['props']['initialRows'][1]['id']);
+        $this->assertSame($c->id, $response->data('page')['props']['initialRows'][2]['id']);
+        $this->assertSame($a->id, $response->data('page')['props']['initialRows'][3]['id']);
+    }
+
+    #[Test]
+    public function edit_page_uses_the_configured_domain_name()
+    {
+        config(['anonaddy.domain' => 'anon.bc3.tech']);
+
+        $username = Username::factory()->create([
+            'user_id' => $this->user->id,
+            'username' => 'bc3tech',
+        ]);
+
+        $response = $this->get("/usernames/{$username->id}/edit");
+
+        $response->assertSuccessful();
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Usernames/Edit')
+            ->where('domainName', 'anon.bc3.tech')
+            ->where('initialUsername.username', 'bc3tech')
+        );
     }
 }

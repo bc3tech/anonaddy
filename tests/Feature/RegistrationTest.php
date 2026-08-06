@@ -21,6 +21,17 @@ class RegistrationTest extends TestCase
     use LazilyRefreshDatabase;
 
     #[Test]
+    public function registration_page_does_not_show_captcha()
+    {
+        $response = $this->get('/register');
+
+        $response
+            ->assertOk()
+            ->assertDontSee('captcha', false)
+            ->assertDontSee('Human Verification');
+    }
+
+    #[Test]
     public function user_can_register_successfully()
     {
         Notification::fake();

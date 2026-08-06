@@ -60,6 +60,42 @@ class ReplyToEmailTest extends TestCase
     }
 
     #[Test]
+    public function it_can_reply_without_dmarc_allow_header_when_sender_domain_policy_fallback_applies()
+    {
+        Mail::fake();
+
+        Mail::assertNothingSent();
+
+        Alias::factory()->create([
+            'user_id' => $this->user->id,
+            'email' => 'ebay@johndoe.'.config('anonaddy.domain'),
+            'local_part' => 'ebay',
+            'domain' => 'johndoe.'.config('anonaddy.domain'),
+        ]);
+
+        $extension = 'contact=ebay.com';
+
+        $this->artisan(
+            'anonaddy:receive-email',
+            [
+                'file' => base_path('tests/emails/email_reply_without_dmarc_header.eml'),
+                '--sender' => $this->user->email,
+                '--recipient' => ['ebay+'.$extension.'@johndoe.anonaddy.com'],
+                '--local_part' => ['ebay'],
+                '--extension' => [$extension],
+                '--domain' => ['johndoe.anonaddy.com'],
+                '--size' => '1000',
+            ]
+        )->assertExitCode(0);
+
+        $this->assertEquals(1, $this->user->aliases()->count());
+
+        Mail::assertQueued(ReplyToEmail::class, function ($mail) {
+            return $mail->hasTo('contact@ebay.com');
+        });
+    }
+
+    #[Test]
     public function it_cannot_reply_using_unverified_recipient()
     {
         Mail::fake();

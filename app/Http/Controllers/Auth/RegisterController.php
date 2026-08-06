@@ -52,22 +52,6 @@ class RegisterController extends Controller
      */
     protected function validator(array $data)
     {
-        // Validate captcha separately first to prevent username enumeration
-        if (! App::environment('testing')) {
-            $validator = Validator::make($data, [
-                'captcha' => [
-                    'required',
-                    'captcha',
-                ],
-            ], [
-                'captcha.captcha' => 'The text entered was incorrect, please try again.',
-            ]);
-
-            if ($validator->fails()) {
-                return $validator;
-            }
-        }
-
         return Validator::make($data, [
             'username' => [
                 'bail',

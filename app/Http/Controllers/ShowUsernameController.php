@@ -45,6 +45,7 @@ class ShowUsernameController extends Controller
 
         return Inertia::render('Usernames/Edit', [
             'initialUsername' => $username->only(['id', 'user_id', 'username', 'description', 'from_name', 'can_login', 'auto_create_regex', 'updated_at']),
+            'domainName' => config('anonaddy.domain'),
         ]);
     }
 }
