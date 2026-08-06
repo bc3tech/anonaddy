@@ -1,0 +1,9 @@
+{
+  "id": "phpredis",
+  "version": "1.0.0",
+  "name": "PHP Redis",
+  "description": "Installs and enables the phpredis extension.",
+  "installsAfter": [
+    "ghcr.io/devcontainers/features/php"
+  ]
+}
